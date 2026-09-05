@@ -25,6 +25,13 @@ class Session {
 
   static bool isLoggedIn() => _has('logged_in');
 
+  /// Preferensi mode tema: '' (ikuti sistem), 'l' terang, 'd' gelap.
+  static String get themeModePref => _str('theme_mode');
+  static Future<void> setThemeModePref(String value) async {
+    await _prefs.setString('theme_mode', value);
+    _bump();
+  }
+
   static String get role => _str('role');
   static int get userId => _num('user_id');
   static String get token => _str('token');

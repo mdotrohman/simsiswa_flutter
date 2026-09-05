@@ -167,6 +167,7 @@ class _BerandaTabState extends State<BerandaTab> {
   }
 
   Widget _sneakErrorCard(String message) {
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -175,12 +176,12 @@ class _BerandaTabState extends State<BerandaTab> {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              const Icon(Icons.cloud_off, color: kTextSecondary),
+              Icon(Icons.cloud_off, color: muted),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   message,
-                  style: const TextStyle(color: kTextSecondary, fontSize: 13),
+                  style: TextStyle(color: muted, fontSize: 13),
                 ),
               ),
               const Icon(Icons.refresh, color: kPrimary, size: 20),
@@ -213,7 +214,7 @@ class _BerandaTabState extends State<BerandaTab> {
                 value,
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
               ),
-              Text(label, style: const TextStyle(color: kTextSecondary, fontSize: 12)),
+              Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12)),
             ],
           ),
         ),

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 
 import 'core/session.dart';
@@ -21,16 +22,30 @@ Future<void> initSession() async {
   }
 }
 
+ThemeMode _themeModeFor(String pref) => switch (pref) {
+      'd' => ThemeMode.dark,
+      'l' => ThemeMode.light,
+      _ => ThemeMode.system,
+    };
+
 class SimSiswaApp extends StatelessWidget {
   const SimSiswaApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'SIM Siswa MTsBU',
-      debugShowCheckedModeBanner: false,
-      theme: buildAppTheme(),
-      home: const _Home(),
+    // Warna adaptif wallpaper (Material You / Android 12+; di Android 16
+    // mengikuti wallpaper). Saat tak tersedia, fallback seed emerald.
+    return DynamicColorBuilder(
+      builder: (lightDynamic, darkDynamic) {
+        return MaterialApp(
+          title: 'SIM Siswa MTsBU',
+          debugShowCheckedModeBanner: false,
+          theme: buildAppTheme(Brightness.light, dynamicScheme: lightDynamic),
+          darkTheme: buildAppTheme(Brightness.dark, dynamicScheme: darkDynamic),
+          themeMode: _themeModeFor(Session.themeModePref),
+          home: const _Home(),
+        );
+      },
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/session.dart';
 import '../tabs/absensi_tab.dart';
 import '../tabs/beranda_tab.dart';
 import '../tabs/pembayaran_tab.dart';
@@ -95,7 +96,23 @@ class _MainShellState extends State<MainShell> {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: Text(_titles[_index])),
+      appBar: AppBar(
+        title: Text(_titles[_index]),
+        actions: [
+          IconButton(
+            tooltip: 'Mode terang/gelap',
+            icon: Icon(
+              Theme.of(context).brightness == Brightness.dark
+                  ? Icons.light_mode_outlined
+                  : Icons.dark_mode_outlined,
+            ),
+            onPressed: () {
+              final isDark = Theme.of(context).brightness == Brightness.dark;
+              Session.setThemeModePref(isDark ? 'l' : 'd');
+            },
+          ),
+        ],
+      ),
       body: IndexedStack(index: _index, children: pages),
       bottomNavigationBar: SafeArea(
         top: false,
@@ -196,7 +213,7 @@ class _OldNavItem extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white,
-                      border: Border.all(color: _kNavRingGreen, width: 16),
+                      border: Border.all(color: _kNavRingGreen, width: 8),
                     ),
                   ),
                 ),

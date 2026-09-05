@@ -177,7 +177,7 @@ class _LoginPageState extends State<LoginPage> {
                   _buildCard(),
                   const SizedBox(height: 16),
                   const Text(
-                    'v1.15 • Premium',
+                    'v1.16 Premium',
                     style: TextStyle(color: Colors.white54, fontSize: 12),
                   ),
                 ],
@@ -190,11 +190,12 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildCard() {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -211,7 +212,7 @@ class _LoginPageState extends State<LoginPage> {
             'Masuk Akun',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: kTextPrimary,
+              color: scheme.onSurface,
               fontSize: 16,
               fontWeight: FontWeight.w700,
             ),
@@ -232,10 +233,6 @@ class _LoginPageState extends State<LoginPage> {
             ],
             selected: {_role},
             onSelectionChanged: (sel) => setState(() => _role = sel.first),
-            style: SegmentedButton.styleFrom(
-              selectedBackgroundColor: kPrimary,
-              selectedForegroundColor: Colors.white,
-            ),
           ),
           const SizedBox(height: 16),
           TextField(
@@ -248,16 +245,6 @@ class _LoginPageState extends State<LoginPage> {
               hintText: _role == 'siswa' ? 'Masukkan NIS siswa' : 'Masukkan NISN siswa',
               helperText: _role == 'wali' ? 'Isi dengan NISN anak Anda' : null,
               prefixIcon: const Icon(Icons.person_outline),
-              filled: true,
-              fillColor: kBackground,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: kPrimary, width: 2),
-              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -276,16 +263,6 @@ class _LoginPageState extends State<LoginPage> {
                 icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined),
                 onPressed: () => setState(() => _obscure = !_obscure),
               ),
-              filled: true,
-              fillColor: kBackground,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: kPrimary, width: 2),
-              ),
             ),
           ),
           if (_error != null) ...[
@@ -296,17 +273,17 @@ class _LoginPageState extends State<LoginPage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFEE2E2),
+                  color: scheme.errorContainer,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline, color: Color(0xFFB91C1C), size: 18),
+                    Icon(Icons.error_outline, color: scheme.onErrorContainer, size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         _error!,
-                        style: const TextStyle(color: Color(0xFFB91C1C), fontSize: 13),
+                        style: TextStyle(color: scheme.onErrorContainer, fontSize: 13),
                       ),
                     ),
                   ],

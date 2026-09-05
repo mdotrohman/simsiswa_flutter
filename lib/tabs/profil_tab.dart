@@ -55,11 +55,20 @@ class _ProfilTabState extends State<ProfilTab> {
                 const SizedBox(height: 4),
                 Text(
                   Session.role == 'wali' ? 'Wali Siswa' : 'Siswa',
-                  style: const TextStyle(color: kTextSecondary, fontSize: 13),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 13,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 if (nis.isNotEmpty)
-                  Text('NIS $nis', style: const TextStyle(color: kTextSecondary, fontSize: 13)),
+                  Text(
+                    'NIS $nis',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 13,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -111,7 +120,7 @@ class _ProfilTabState extends State<ProfilTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(color: kTextSecondary, fontSize: 12)),
+                Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12)),
                 Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
               ],
             ),
