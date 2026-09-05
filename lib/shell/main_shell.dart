@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../core/session.dart';
 import '../tabs/absensi_tab.dart';
 import '../tabs/beranda_tab.dart';
 import '../tabs/pembayaran_tab.dart';
@@ -96,23 +95,7 @@ class _MainShellState extends State<MainShell> {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_titles[_index]),
-        actions: [
-          IconButton(
-            tooltip: 'Mode terang/gelap',
-            icon: Icon(
-              Theme.of(context).brightness == Brightness.dark
-                  ? Icons.light_mode_outlined
-                  : Icons.dark_mode_outlined,
-            ),
-            onPressed: () {
-              final isDark = Theme.of(context).brightness == Brightness.dark;
-              Session.setThemeModePref(isDark ? 'l' : 'd');
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text(_titles[_index])),
       body: IndexedStack(index: _index, children: pages),
       bottomNavigationBar: SafeArea(
         top: false,
@@ -132,8 +115,8 @@ class _MainShellState extends State<MainShell> {
 }
 
 const _kNavGreen = Color(0xFF00664F);
-const _kNavRingGreen = Color(0xFF00483A);
-const _kNavDiscGreen = Color(0xFF0FA576);
+const _kNavRim = Color(0xFF004A3A);
+const _kActiveDisc = Color(0xFF10B981);
 
 /// Bilah nav bawah gaya app lama.
 class _OldBottomNav extends StatelessWidget {
@@ -189,8 +172,8 @@ class _OldNavItem extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        // Seluruh blok ikon (lingkaran + piring + ikon) melayang 50% ke atas
-        // saat aktif; label tetap diam sangat dekat di bawahnya.
+        // Seluruh blok ikon (piring aktif + ikon) melayang 50% ke atas saat
+        // aktif; label ikut naik bersama (lebih halus).
         AnimatedSlide(
           offset: active ? const Offset(0, -0.5) : Offset.zero,
           duration: const Duration(milliseconds: 260),
@@ -202,9 +185,10 @@ class _OldNavItem extends StatelessWidget {
               alignment: Alignment.center,
               clipBehavior: Clip.none,
               children: [
-                // Lingkaran luar (ring putih + anting tebal) yang membesar saat aktif.
+                // Piring aktif: satu aksen emerald bersih + rim tipis, tanpa
+                // tumpukan lingkaran warna lain agar rapi & profesional.
                 AnimatedScale(
-                  scale: active ? 1.35 : 0.001,
+                  scale: active ? 1.30 : 0.001,
                   duration: const Duration(milliseconds: 240),
                   curve: Curves.easeOutBack,
                   child: Container(
@@ -212,34 +196,38 @@ class _OldNavItem extends StatelessWidget {
                     height: 54,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white,
-                      border: Border.all(color: _kNavRingGreen, width: 8),
+                      color: _kActiveDisc,
+                      border: Border.all(color: _kNavRim, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.25),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                // Piring dalam: warna BERBEDA dari bar (aksen emerald).
                 AnimatedScale(
-                  scale: active ? 1.35 : 0.001,
-                  duration: const Duration(milliseconds: 240),
-                  curve: Curves.easeOutBack,
-                  child: Container(
-                    width: 22,
-                    height: 22,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _kNavDiscGreen,
-                    ),
+                  scale: active ? 1.0 : 0.9,
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
+                  child: Icon(
+                    icon,
+                    size: active ? 30 : 24,
+                    color: Colors.white,
                   ),
                 ),
-                _NavIcon(icon: icon, active: active),
               ],
             ),
           ),
         ),
         const SizedBox(height: 2),
-        // Label digeser naik sedikit agar lebih rapat ke blok ikon.
-        Transform.translate(
-          offset: const Offset(0, -4),
+        // Teks menu ikut bergeser naik (sedikit lebih saat aktif).
+        AnimatedSlide(
+          offset: active ? const Offset(0, -0.25) : const Offset(0, -0.05),
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
           child: AnimatedScale(
             scale: active ? 1.0 : 0.96,
             duration: const Duration(milliseconds: 200),
@@ -256,22 +244,6 @@ class _OldNavItem extends StatelessWidget {
         ),
         const SizedBox(height: 10),
       ],
-    );
-  }
-}
-
-class _NavIcon extends StatelessWidget {
-  const _NavIcon({required this.icon, required this.active});
-
-  final IconData icon;
-  final bool active;
-
-  @override
-  Widget build(BuildContext context) {
-    return Icon(
-      icon,
-      size: active ? 30 : 24,
-      color: Colors.white,
     );
   }
 }

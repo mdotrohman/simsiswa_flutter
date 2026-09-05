@@ -22,12 +22,6 @@ Future<void> initSession() async {
   }
 }
 
-ThemeMode _themeModeFor(String pref) => switch (pref) {
-      'd' => ThemeMode.dark,
-      'l' => ThemeMode.light,
-      _ => ThemeMode.system,
-    };
-
 class SimSiswaApp extends StatelessWidget {
   const SimSiswaApp({super.key});
 
@@ -42,7 +36,7 @@ class SimSiswaApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           theme: buildAppTheme(Brightness.light, dynamicScheme: lightDynamic),
           darkTheme: buildAppTheme(Brightness.dark, dynamicScheme: darkDynamic),
-          themeMode: _themeModeFor(Session.themeModePref),
+          themeMode: ThemeMode.system,
           home: const _Home(),
         );
       },
