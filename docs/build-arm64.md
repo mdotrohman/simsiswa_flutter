@@ -88,6 +88,15 @@ apksigner sign --ks android/release.keystore --ks-key-alias simsiswa \
 Hasil: APK ±8,4MB per ABI, render normal, sertifikat resmi SHA-256 `84fa49a1…`;
 dilakukan per ABI (arm64-v8a, armeabi-v7a, x86_64).
 
+### 4a. Alternatif satu file universal (fat APK)
+
+`build_local.sh &lt;CISRC&gt;` otomatis menyusun **satu APK universal** ke
+`SIMSiswaMTsBU.apk` (±23MB): basis split arm64-v8a lokal (ter-injeksi) + folder
+`lib/` dari split CI untuk `armeabi-v7a` dan `x86_64`. Dipakai bila hanya ingin
+**satu file** yang jalan di semua perangkat (tua, modern, emulator). Trade-off:
+ukuran lebih besar; split per-ABI tetap lebih ringan bila distribusi via store
+yang mendukung multi-APK.
+
 ## 5. Batas minimal versi OS
 
 - **Android**: `minSdk = 21` (Android 5.0 Lollipop) di `android/app/build.gradle.kts`
