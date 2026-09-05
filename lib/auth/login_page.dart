@@ -177,7 +177,7 @@ class _LoginPageState extends State<LoginPage> {
                   _buildCard(),
                   const SizedBox(height: 16),
                   const Text(
-                    'v1.13 • Siswa & Wali',
+                    'v1.14 • Siswa & Wali',
                     style: TextStyle(color: Colors.white54, fontSize: 12),
                   ),
                 ],

@@ -127,7 +127,7 @@ class _OldBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 84,
+      height: 80,
       decoration: const BoxDecoration(
         color: _kNavGreen,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -171,52 +171,54 @@ class _OldNavItem extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        SizedBox(
-          width: 62,
-          height: 62,
-          child: Stack(
-            alignment: Alignment.center,
-            clipBehavior: Clip.none,
-            children: [
-              // Lingkaran luar (ring putih) yang membesar saat aktif.
-              AnimatedScale(
-                scale: active ? 1.35 : 0.001,
-                duration: const Duration(milliseconds: 240),
-                curve: Curves.easeOutBack,
-                child: Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                    border: Border.all(color: _kNavRingGreen, width: 2),
+        // Seluruh blok ikon (lingkaran + piring + ikon) melayang 50% ke atas
+        // saat aktif; label tetap diam sangat dekat di bawahnya.
+        AnimatedSlide(
+          offset: active ? const Offset(0, -0.5) : Offset.zero,
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
+          child: SizedBox(
+            width: 62,
+            height: 62,
+            child: Stack(
+              alignment: Alignment.center,
+              clipBehavior: Clip.none,
+              children: [
+                // Lingkaran luar (ring putih tebal) yang membesar saat aktif.
+                AnimatedScale(
+                  scale: active ? 1.35 : 0.001,
+                  duration: const Duration(milliseconds: 240),
+                  curve: Curves.easeOutBack,
+                  child: Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      border: Border.all(color: _kNavRingGreen, width: 8),
+                    ),
                   ),
                 ),
-              ),
-              // Piring hijau dalam (ikon putih solida di atasnya).
-              AnimatedScale(
-                scale: active ? 1.35 : 0.001,
-                duration: const Duration(milliseconds: 240),
-                curve: Curves.easeOutBack,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _kNavGreen,
+                // Piring hijau dalam (ikon putih solida di atasnya).
+                AnimatedScale(
+                  scale: active ? 1.35 : 0.001,
+                  duration: const Duration(milliseconds: 240),
+                  curve: Curves.easeOutBack,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _kNavGreen,
+                    ),
                   ),
                 ),
-              ),
-              AnimatedSlide(
-                offset: active ? const Offset(0, -0.30) : Offset.zero,
-                duration: const Duration(milliseconds: 260),
-                curve: Curves.easeOut,
-                child: _NavIcon(icon: icon),
-              ),
-            ],
+                _NavIcon(icon: icon),
+              ],
+            ),
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 2),
         AnimatedScale(
           scale: active ? 1.0 : 0.96,
           duration: const Duration(milliseconds: 200),
@@ -230,7 +232,7 @@ class _OldNavItem extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
       ],
     );
   }
