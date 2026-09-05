@@ -91,11 +91,12 @@ dilakukan per ABI (arm64-v8a, armeabi-v7a, x86_64).
 ### 4a. Alternatif satu file universal (fat APK)
 
 `build_local.sh &lt;CISRC&gt;` otomatis menyusun **satu APK universal** ke
-`SIMSiswaMTsBU.apk` (±23MB): basis split arm64-v8a lokal (ter-injeksi) + folder
-`lib/` dari split CI untuk `armeabi-v7a` dan `x86_64`. Dipakai bila hanya ingin
-**satu file** yang jalan di semua perangkat (tua, modern, emulator). Trade-off:
-ukuran lebih besar; split per-ABI tetap lebih ringan bila distribusi via store
-yang mendukung multi-APK.
+`SIMSiswaMTsBU.apk` (±15MB): basis split arm64-v8a lokal (ter-injeksi) + folder
+`lib/armeabi-v7a/` dari split CI. Dipakai bila hanya ingin **satu file** yang jalan
+di semua perangkat Android (arm64/v7a). `x86_64` (emulator) tetap disediakan
+terpisah `SIMSiswaMTsBU-x86_64.apk`. Trade-off: ukuran lebih besar; split per-ABI
+tetap lebih ringan bila distribusi via store yang mendukung multi-APK, atau pakai
+App Bundle (`.aab`) agar pengguna mengunduh ABI yang dibutuhkan saja.
 
 ## 5. Batas minimal versi OS
 

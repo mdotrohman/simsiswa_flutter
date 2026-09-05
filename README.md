@@ -19,7 +19,7 @@ Ada **dua jalur**, dipakai sesuai kebutuhan:
 | **Development / iterasi cepat** | Lokal di HP (Termux/proot) | Cepat, privat, tanpa push. |
 | **Rilis yang dipakai publik** | GitHub Actions (CI) | APK semua ABI + cek build iOS. |
 | **Rilis final** | Lokal + injeksi lib dari artefak CI | Byte-identik dgn hasil CI. |
-| **Satu file untuk semua** | Lokal (universal/fat APK) | Gabung lib ke-3 ABI ke 1 APK (23MB). |
+| **Satu file untuk semua** | Lokal (universal/fat APK) | Gabung lib arm64+v7a → 1 APK (±15MB). x86_64 tersedia terpisah. |
 
 ### Kenapa dua jalur? (pelajaran yang sudah dibuktikan)
 
@@ -68,8 +68,10 @@ bash /root/build_local.sh /tmp/ci_apk
 #      lalu zipalign + apksigner. Rincian: docs/build-arm64.md ("Rilis lokal dengan injeksi lib")
 ```
 
-Hasil akhir: APK split ±8,4MB per ABI, atau **satu universal** ±23MB (semua ABI)
-— sertifikat resmi SHA-256 `84fa49a1…` (over-install antar versi aman).
+Hasil akhir: APK split ±8,4MB per ABI, atau **satu universal** ±15MB (arm64-v8a +
+armeabi-v7a; x86_64 dipisah untuk emulator) — sertifikat resmi SHA-256
+`84fa49a1…` (over-install antar versi aman). Alternatif pemangkasan lebih lanjut:
+`--obfuscate`, atau App Bundle (`.aab`) agar Play hanya mengirim ABI yang dibutuhkan.
 
 ## Keystore & Keamanan
 
