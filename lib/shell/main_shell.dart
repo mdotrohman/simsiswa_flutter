@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../tabs/absensi_tab.dart';
@@ -184,6 +186,17 @@ class _OldNavItem extends StatelessWidget {
               alignment: Alignment.center,
               clipBehavior: Clip.none,
               children: [
+                // Ring "cradle" aktif: busur bawah tebal sewarna background
+                // halaman (menempel ke bar, tanpa kesan mengambang), atas
+                // sepenuhnya transparan.
+                if (active)
+                  CustomPaint(
+                    painter: _CradleRingPainter(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      thickness: 16,
+                    ),
+                    child: const SizedBox(width: 82, height: 82),
+                  ),
                 // Piring aktif: satu aksen emerald bersih + rim tipis.
                 AnimatedScale(
                   scale: active ? 1.30 : 0.001,
@@ -246,4 +259,34 @@ class _OldNavItem extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Ring "cradle" aktif: busur setengah bawah (semi-circle) tebal, atas
+/// transparan penuh — menyatu dengan background halaman.
+class _CradleRingPainter extends CustomPainter {
+  _CradleRingPainter({required this.color, required this.thickness});
+
+  final Color color;
+  final double thickness;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = thickness
+      ..color = color
+      ..strokeCap = StrokeCap.round;
+    final rect = Rect.fromLTWH(
+      thickness / 2,
+      thickness / 2,
+      size.width - thickness,
+      size.height - thickness,
+    );
+    // Busur bawah: dari kanan lewat dasar ke kiri (atas terbuka/transparan).
+    canvas.drawArc(rect, 0, math.pi, false, paint);
+  }
+
+  @override
+  bool shouldRepaint(_CradleRingPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.thickness != thickness;
 }
