@@ -1,9 +1,11 @@
 # simsiswa_flutter
 
 Aplikasi mobile **SIM Siswa MTs Bahrul Ulum Tambakberas** — pengganti aplikasi Java
-lama untuk siswa & wali. Satu codebase Flutter, target Android (arm64) untuk saat ini;
-iOS bisa menyusul via CI.
+lama untuk siswa & wali. Satu codebase Flutter.
 
+- **Android**: API 21 (Android 5.0) → terbaru; ABI `arm64-v8a`, `armeabi-v7a` (32-bit),
+  `x86_64` (emulator).
+- **iOS**: iOS 13.0 (iPhone 6s/SE/7 ke atas) → terbaru; device & simulator.
 - Login siswa (`NIS` + kata sandi) & wali (`NISN` siswa + `NIK` wali) ke SIM SIAPOS.
 - Backend: `https://sim.mtsbutambakberas.sch.id`
 - Kontrak login: `POST app/api/apk/siswa/login` dengan JSON `{username, password, role}`.
@@ -15,8 +17,8 @@ Ada **dua jalur**, dipakai sesuai kebutuhan:
 | Kebutuhan | Jalur | Keterangan |
 |---|---|---|
 | **Development / iterasi cepat** | Lokal di HP (Termux/proot) | Cepat, privat, tanpa push. |
-| **Rilis yang dipakai publik** | GitHub Actions (CI) | Menghasilkan APK yang benar-benar render. |
-| **Rilis final** | Lokal, injeksi lib dari artefak CI | Byte-identik dgn hasil CI. |
+| **Rilis yang dipakai publik** | GitHub Actions (CI) | APK semua ABI + cek build iOS. |
+| **Rilis final** | Lokal + injeksi lib dari artefak CI | Byte-identik dgn hasil CI. |
 
 ### Kenapa dua jalur? (pelajaran yang sudah dibuktikan)
 
@@ -37,7 +39,9 @@ Ada **dua jalur**, dipakai sesuai kebutuhan:
 bash /root/build_local.sh
 ```
 
-Build → align → tanda tangan resmi → salin ke `/storage/emulated/0/Download/SIMSiswaMTsBU.apk`.
+Menghasilkan APK untuk **semua ABI** (`arm64-v8a`, `armeabi-v7a`, `x86_64`),
+di-align, ditandatangani resmi, lalu disalin ke
+`/storage/emulated/0/Download/SIMSiswaMTsBU*.apk`.
 
 ### 2) Rilis publik — lewat GitHub Actions
 
@@ -45,9 +49,11 @@ Build → align → tanda tangan resmi → salin ke `/storage/emulated/0/Downloa
 git add -A && git commit -m "..." && git push origin main
 ```
 
-Workflow `.github/workflows/build-apk.yml` (Flutter stable, split-per-ABI) otomatis:
-analyze, test, build. Artefak `apk-release` diunduh lalu ditandatangani lokal
-(keystore tidak pernah masuk repo — lihat di bawah).
+Workflow `.github/workflows/build-apk.yml` (Flutter stable) otomatis:
+analyze, test, build **APK semua ABI** (`--split-per-abi`), plus job **iOS build**
+di `macos-latest` (`flutter build ios --release --no-codesign`) untuk memastikan
+codebase tetap kompatibel iPhone/iPad. Artefak APK diunduh lalu ditandatangani
+lokal (keystore tidak pernah masuk repo — lihat di bawah).
 
 ### 3) Rilis final dari lokal (rekomendasi)
 
@@ -55,13 +61,13 @@ Karena AOT arm64-host rusak, untuk rilis lokal yang dijamin render gunakan biner
 **yang sudah terbukti** dari artefak CI (kode identik saat HEAD sama):
 
 ```
-# setelah CI sukses & artefak diunduh:
-#  - ganti lib/arm64-v8a/libapp.so dan libflutter.so di APK lokal
-#    dengan isi artefak CI, lalu zipalign + apksigner ulang.
-# Skrip lengkap: docs/build-arm64.md ("Rilis lokal dengan injeksi lib")
+# setelah CI sukses & artefak diunduh ke /tmp/ci_apk:
+bash /root/build_local.sh /tmp/ci_apk
+#   -> AOT lokal ditimpa biner terbukti dari CI per ABI (libapp.so + libflutter.so),
+#      lalu zipalign + apksigner. Rincian: docs/build-arm64.md ("Rilis lokal dengan injeksi lib")
 ```
 
-Hasil akhir APK ±8,4MB, sertifikat SHA-256 `84fa49a1…` (over-install antar versi aman).
+Hasil akhir APK ±8,4MB per ABI, sertifikat SHA-256 `84fa49a1…` (over-install antar versi aman).
 
 ## Keystore & Keamanan
 

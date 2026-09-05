@@ -38,15 +38,16 @@ Aapt2 yang diunduh Maven adalah biner x64 → SIGILL di HP. Letakkan di
 android.aapt2FromMavenOverride=/opt/android-sdk/build-tools/36.0.0/aapt2
 ```
 
-## 3. Build release lokal
+## 3. Build release lokal (semua ABI)
 
 ```bash
 cd /root/simsiswa_flutter
-flutter build apk --release --split-per-abi --target-platform android-arm64
+flutter build apk --release --split-per-abi
 ```
 
-Skrip `build_local.sh` menggabungkan: pub get → build → zipalign → apksigner →
-salin ke `/storage/emulated/0/Download/SIMSiswaMTsBU.apk`.
+Menghasilkan tiga APK: `arm64-v8a`, `armeabi-v7a`, `x86_64`. Skrip
+`build_local.sh` menggabungkan: pub get → build → (opsional injeksi lib) →
+zipalign → apksigner → salin ke `/storage/emulated/0/Download/SIMSiswaMTsBU*.apk`.
 
 > ⚠️ AOT release yang dihasilkan host arm64 **belum tentu render** (blank).
 > Penyebab: `libapp.so` lokal ±10,8MB, tidak normal; versi jalan ±5,1MB.
@@ -84,7 +85,17 @@ apksigner sign --ks android/release.keystore --ks-key-alias simsiswa \
   --out /storage/emulated/0/Download/SIMSiswaMTsBU.apk final.apk
 ```
 
-Hasil: APK ±8,4MB, render normal, sertifikat resmi SHA-256 `84fa49a1…`.
+Hasil: APK ±8,4MB per ABI, render normal, sertifikat resmi SHA-256 `84fa49a1…`;
+dilakukan per ABI (arm64-v8a, armeabi-v7a, x86_64).
+
+## 5. Batas minimal versi OS
+
+- **Android**: `minSdk = 21` (Android 5.0 Lollipop) di `android/app/build.gradle.kts`
+  — batas terendah yang didukung Flutter & plugin `shared_preferences`.
+- **iOS**: `IPHONEOS_DEPLOYMENT_TARGET = 13.0` di `ios/Runner.xcodeproj/project.pbxproj`
+  (iPhone 6s/SE/7 ke atas). Validasi build iOS di CI via job `ios-build`
+  (`flutter build ios --release --no-codesign`). Menandatangani & distribusi App Store
+  perlu Apple developer account di mesin macOS.
 
 ## Ukuran yang sehat (patokan)
 
