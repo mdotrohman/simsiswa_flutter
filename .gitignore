@@ -51,3 +51,5 @@ app.*.map.json
 android/local.properties
 android/keystore.properties
 android/release.keystore
+
+pubspec.lock
