@@ -116,6 +116,7 @@ class _MainShellState extends State<MainShell> {
 
 const _kNavGreen = Color(0xFF00664F);
 const _kNavRingGreen = Color(0xFF00483A);
+const _kNavDiscGreen = Color(0xFF0FA576);
 
 /// Bilah nav bawah gaya app lama.
 class _OldBottomNav extends StatelessWidget {
@@ -184,51 +185,55 @@ class _OldNavItem extends StatelessWidget {
               alignment: Alignment.center,
               clipBehavior: Clip.none,
               children: [
-                // Lingkaran luar (ring putih tebal) yang membesar saat aktif.
+                // Lingkaran luar (ring putih + anting tebal) yang membesar saat aktif.
                 AnimatedScale(
                   scale: active ? 1.35 : 0.001,
                   duration: const Duration(milliseconds: 240),
                   curve: Curves.easeOutBack,
                   child: Container(
-                    width: 46,
-                    height: 46,
+                    width: 54,
+                    height: 54,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white,
-                      border: Border.all(color: _kNavRingGreen, width: 8),
+                      border: Border.all(color: _kNavRingGreen, width: 16),
                     ),
                   ),
                 ),
-                // Piring hijau dalam (ikon putih solida di atasnya).
+                // Piring dalam: warna BERBEDA dari bar (aksen emerald).
                 AnimatedScale(
                   scale: active ? 1.35 : 0.001,
                   duration: const Duration(milliseconds: 240),
                   curve: Curves.easeOutBack,
                   child: Container(
-                    width: 40,
-                    height: 40,
+                    width: 22,
+                    height: 22,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _kNavGreen,
+                      color: _kNavDiscGreen,
                     ),
                   ),
                 ),
-                _NavIcon(icon: icon),
+                _NavIcon(icon: icon, active: active),
               ],
             ),
           ),
         ),
         const SizedBox(height: 2),
-        AnimatedScale(
-          scale: active ? 1.0 : 0.96,
-          duration: const Duration(milliseconds: 200),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              letterSpacing: 0.3,
-              fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+        // Label digeser naik sedikit agar lebih rapat ke blok ikon.
+        Transform.translate(
+          offset: const Offset(0, -4),
+          child: AnimatedScale(
+            scale: active ? 1.0 : 0.96,
+            duration: const Duration(milliseconds: 200),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                letterSpacing: 0.3,
+                fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+              ),
             ),
           ),
         ),
@@ -239,15 +244,16 @@ class _OldNavItem extends StatelessWidget {
 }
 
 class _NavIcon extends StatelessWidget {
-  const _NavIcon({required this.icon});
+  const _NavIcon({required this.icon, required this.active});
 
   final IconData icon;
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
     return Icon(
       icon,
-      size: 24,
+      size: active ? 30 : 24,
       color: Colors.white,
     );
   }
