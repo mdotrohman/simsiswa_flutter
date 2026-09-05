@@ -18,10 +18,10 @@ Ada **dua jalur**, dipakai sesuai kebutuhan:
 
 | Kebutuhan | Jalur | Keterangan |
 |---|---|---|
-| **Development / iterasi cepat** | Lokal di HP (Termux/proot) | Cepat, privat, tanpa push. |
-| **Rilis yang dipakai publik** | GitHub Actions (CI) | APK semua ABI + cek build iOS. |
+| **Development / iterasi cepat** | CI arm64 + `fetch_ci.sh` + `build_local.sh` | Push → CI ±3–4m → unduh (anti-race) → sign 4 detik. |
+| **Rilis yang dipakai publik** | GitHub Actions (`build-full.yml`) | Workflow terpisah: semua ABI (dispatch manual / tag `v*`). |
 | **Rilis final** | Lokal + injeksi lib dari artefak CI | Byte-identik dgn hasil CI. |
-| **Satu file untuk semua** | Lokal (universal/fat APK) | Gabung lib arm64+v7a → 1 APK (±15MB). x86_64 tersedia terpisah. |
+| **Satu file untuk semua** | Lokal (universal/fat APK) | Gabung lib arm64+v7a → 1 APK (±15MB); fast-path arm64 saja ±8,6MB. |
 
 ### Kenapa dua jalur? (pelajaran yang sudah dibuktikan)
 
@@ -36,15 +36,18 @@ Ada **dua jalur**, dipakai sesuai kebutuhan:
   Perlu 2 perbaikan tambahan (lihat `docs/build-arm64.md`): menyediakan
   `gen_snapshot` arm64 dari Dart SDK, dan override `aapt2` arm64.
 
-### 1) Development — build lokal (loop cepat)
+### 1) Development — loop cepat (CI arm64, tanpa build Gradle lokal)
 
-```
-bash /root/build_local.sh
+```bash
+git add -A && git commit -m "..." && git push origin main   # memicu workflow arm64+caching
+bash /root/fetch_ci.sh                                        # unduh artefak run yang cocok dgn HEAD (anti-race)
+bash /root/build_local.sh /tmp/ci_apk                         # ambil APK arm64 dari CI → sign langsung (±4 dtk)
 ```
 
-Menghasilkan APK untuk **semua ABI** (`arm64-v8a`, `armeabi-v7a`, `x86_64`),
-di-align, ditandatangani resmi, lalu disalin ke
-`/storage/emulated/0/Download/SIMSiswaMTsBU*.apk`.
+Karena `libapp.so` arm64 dari host x64 CI sudah benar, tidak perlu build AOT
+lokal maupun injeksi manual — cukup sign ulang. Output di
+`/storage/emulated/0/Download/SIMSiswaMTsBU.apk` (±8,6MB, arm64; bila artefak
+full tersedia, otomatis digabung v7a menjadi ±15MB universal).
 
 ### 2) Rilis publik — lewat GitHub Actions
 
@@ -53,10 +56,12 @@ git add -A && git commit -m "..." && git push origin main
 ```
 
 Workflow `.github/workflows/build-apk.yml` (Flutter stable) otomatis:
-analyze, test, build **APK semua ABI** (`--split-per-abi`), plus job **iOS build**
-di `macos-latest` (`flutter build ios --release --no-codesign`) untuk memastikan
-codebase tetap kompatibel iPhone/iPad. Artefak APK diunduh lalu ditandatangani
-lokal (keystore tidak pernah masuk repo — lihat di bawah).
+analyze, test, build **APK arm64-v8a saja** (cepat; caching Flutter/Gradle), plus
+job **iOS build** di `macos-latest` (`flutter build ios --release --no-codesign`)
+untuk memastikan codebase tetap kompatibel iPhone/iPad. Artefak APK diunduh lalu
+ditandatangani lokal (keystore tidak pernah masuk repo — lihat di bawah). Untuk
+**semua ABI** (rilis publik), jalankan `.github/workflows/build-full.yml`
+(dispatch manual atau tag `v*`) yang tetap menghasilkan split `arm64/v7a/x64`.
 
 ### 3) Rilis final dari lokal (rekomendasi)
 
@@ -66,8 +71,8 @@ Karena AOT arm64-host rusak, untuk rilis lokal yang dijamin render gunakan biner
 ```
 # setelah CI sukses & artefak diunduh ke /tmp/ci_apk:
 bash /root/build_local.sh /tmp/ci_apk
-#   -> AOT lokal ditimpa biner terbukti dari CI per ABI (libapp.so + libflutter.so),
-#      lalu zipalign + apksigner. Rincian: docs/build-arm64.md ("Rilis lokal dengan injeksi lib")
+#   -> mode cepat: APK CI dipakai langsung (libapp benar) → zipalign + apksigner.
+#      Bila artefak 'build-full', lib/ armeabi-v7a ikut digabung → universal dua ABI.
 ```
 
 Hasil akhir: APK split ±8,4MB per ABI, atau **satu universal** ±15MB (arm64-v8a +
