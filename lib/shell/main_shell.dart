@@ -128,7 +128,7 @@ class _OldBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 80,
+      height: 74,
       decoration: const BoxDecoration(
         color: _kNavGreen,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -172,28 +172,26 @@ class _OldNavItem extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        // Seluruh blok ikon (piring aktif + ikon) melayang 50% ke atas saat
-        // aktif; label ikut naik bersama (lebih halus).
+        // Blok ikon (piring aktif + ikon) melayang 50% ke atas saat aktif.
         AnimatedSlide(
           offset: active ? const Offset(0, -0.5) : Offset.zero,
           duration: const Duration(milliseconds: 260),
           curve: Curves.easeOutCubic,
           child: SizedBox(
             width: 62,
-            height: 62,
+            height: 46,
             child: Stack(
               alignment: Alignment.center,
               clipBehavior: Clip.none,
               children: [
-                // Piring aktif: satu aksen emerald bersih + rim tipis, tanpa
-                // tumpukan lingkaran warna lain agar rapi & profesional.
+                // Piring aktif: satu aksen emerald bersih + rim tipis.
                 AnimatedScale(
                   scale: active ? 1.30 : 0.001,
                   duration: const Duration(milliseconds: 240),
                   curve: Curves.easeOutBack,
                   child: Container(
-                    width: 54,
-                    height: 54,
+                    width: 52,
+                    height: 52,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: _kActiveDisc,
@@ -222,27 +220,29 @@ class _OldNavItem extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 2),
-        // Teks menu ikut bergeser naik (sedikit lebih saat aktif).
-        AnimatedSlide(
-          offset: active ? const Offset(0, -0.25) : const Offset(0, -0.05),
-          duration: const Duration(milliseconds: 260),
-          curve: Curves.easeOutCubic,
-          child: AnimatedScale(
-            scale: active ? 1.0 : 0.96,
-            duration: const Duration(milliseconds: 200),
-            child: Text(
-              label,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 11,
-                letterSpacing: 0.3,
-                fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+        // Label dinaikkan agar menempel rapat di bawah piring ikon.
+        Transform.translate(
+          offset: const Offset(0, -8),
+          child: AnimatedSlide(
+            offset: active ? const Offset(0, -0.25) : const Offset(0, -0.05),
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+            child: AnimatedScale(
+              scale: active ? 1.0 : 0.96,
+              duration: const Duration(milliseconds: 200),
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  letterSpacing: 0.3,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+                ),
               ),
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
       ],
     );
   }
