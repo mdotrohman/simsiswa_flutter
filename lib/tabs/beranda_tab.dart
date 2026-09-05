@@ -223,10 +223,10 @@ class _BerandaTabState extends State<BerandaTab> {
 
   Widget _menuGrid() {
     final items = [
-      _MenuItem(Icons.event_available, 'Absensi', () => widget.onNavigate(1)),
       _MenuItem(Icons.payments, 'Pembayaran', () => widget.onNavigate(2)),
-      _MenuItem(Icons.campaign, 'Pengumuman', () => widget.onNavigate(3)),
-      _MenuItem(Icons.person, 'Profil', () => widget.onNavigate(4)),
+      _MenuItem(Icons.event_available, 'Absensi', () => widget.onNavigate(3)),
+      _MenuItem(Icons.campaign, 'Pengumuman', () => widget.onNavigate(4)),
+      _MenuItem(Icons.person, 'Profil', () => widget.onNavigate(1)),
     ];
     return GridView.count(
       crossAxisCount: 2,
