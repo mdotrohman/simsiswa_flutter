@@ -26,14 +26,16 @@ jobs:
           flutter analyze
           flutter test
 
-      - name: Build release APK
-        run: flutter build apk --release --split-per-abi
+      # Iterasi harian: cukup ABI perangkat utama (arm64-v8a) agar cepat.
+      # Versi penuh semua ABI ada di 'build-full.yml' (workflow_dispatch / tag).
+      - name: Build release APK (arm64-v8a)
+        run: flutter build apk --release --split-per-abi --target-platform android-arm64
 
-      - name: Upload APKs
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: apk-release
-          path: build/app/outputs/flutter-apk/app-*-release.apk
+          name: apk-arm64
+          path: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
 
   ios-build:
     name: "iOS build (validasi semua device)"
@@ -52,4 +54,4 @@ jobs:
         run: flutter pub get
 
       - name: Build iOS (no codesign)
-        run: flutter build ios --release --no-codesign --build-number 2012 --build-name 1.10
+        run: flutter build ios --release --no-codesign

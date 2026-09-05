@@ -1,0 +1,39 @@
+name: build-full
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter (stable)
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Analyze & test
+        run: |
+          flutter analyze
+          flutter test
+
+      # Versi penuh: semua ABI (arm64-v8a, armeabi-v7a, x86_64) untuk rilis
+      # final; dipakai saat aplikasi sudah matang.
+      - name: Build release APK (semua ABI)
+        run: flutter build apk --release --split-per-abi
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-full
+          path: build/app/outputs/flutter-apk/app-*-release.apk
