@@ -34,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _error = null);
 
     if (username.isEmpty) {
-      setState(() => _error = _role == 'siswa' ? 'NIS wajib diisi' : 'Username wajib diisi');
+      setState(() => _error = _role == 'siswa' ? 'NIS wajib diisi' : 'NIK wali wajib diisi');
       return;
     }
     if (password.isEmpty) {
@@ -178,8 +178,8 @@ class _LoginPageState extends State<LoginPage> {
             keyboardType: TextInputType.text,
             textInputAction: TextInputAction.next,
             decoration: InputDecoration(
-              labelText: _role == 'siswa' ? 'NIS' : 'Username',
-              hintText: _role == 'siswa' ? 'Masukkan NIS' : 'Masukkan username',
+              labelText: _role == 'siswa' ? 'NIS' : 'NIK Wali',
+              hintText: _role == 'siswa' ? 'Masukkan NIS' : 'Masukkan NIK wali',
               prefixIcon: const Icon(Icons.person_outline),
               filled: true,
               fillColor: kBackground,
