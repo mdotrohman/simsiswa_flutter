@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/api.dart';
+import '../core/credential_store.dart';
 import '../core/session.dart';
 import '../core/theme.dart';
 import '../shell/main_shell.dart';
@@ -19,6 +20,21 @@ class _LoginPageState extends State<LoginPage> {
   bool _loading = false;
   String? _error;
   bool _obscure = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefillSaved();
+  }
+
+  Future<void> _prefillSaved() async {
+    final saved = await CredentialStore.load();
+    if (!mounted || saved == null) return;
+    _username.text = saved.username;
+    _password.text = saved.password;
+    _role = saved.role;
+    setState(() {});
+  }
 
   @override
   void dispose() {
@@ -59,6 +75,18 @@ class _LoginPageState extends State<LoginPage> {
         waliNama: data.waliNama,
       );
       if (!mounted) return;
+      final saved = await CredentialStore.load();
+      final shouldOffer = saved == null ||
+          saved.username != data.username ||
+          saved.password != password;
+      if (shouldOffer) {
+        await _offerSavePassword(
+          username: data.username,
+          role: data.role,
+          password: password,
+        );
+      }
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const MainShell()),
       );
@@ -70,6 +98,44 @@ class _LoginPageState extends State<LoginPage> {
       setState(() => _error = 'Login gagal: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  /// Penawaran gaya Google: simpan sandi untuk masuk berikutnya?
+  Future<void> _offerSavePassword({
+    required String username,
+    required String role,
+    required String password,
+  }) async {
+    final act = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.shield_outlined, color: kPrimary),
+        title: const Text('Simpan sandi?'),
+        content: Text(
+          'Simpan $username agar login berikutnya otomatis terisi? '
+          'Sandi dienkripsi di keamanan perangkat (Keystore/Keychain).',
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop('no'),
+            child: const Text('Tidak'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.of(ctx).pop('yes'),
+            icon: const Icon(Icons.key, size: 18),
+            label: const Text('Simpan'),
+          ),
+        ],
+      ),
+    );
+    if (act == 'yes') {
+      await CredentialStore.save(
+        username: username,
+        role: role,
+        password: password,
+      );
     }
   }
 
@@ -111,7 +177,7 @@ class _LoginPageState extends State<LoginPage> {
                   _buildCard(),
                   const SizedBox(height: 16),
                   const Text(
-                    'v1.09 • Siswa & Wali',
+                    'v1.11 • Siswa & Wali',
                     style: TextStyle(color: Colors.white54, fontSize: 12),
                   ),
                 ],

@@ -7,6 +7,8 @@ lama untuk siswa & wali. Satu codebase Flutter.
   `x86_64` (emulator).
 - **iOS**: iOS 13.0 (iPhone 6s/SE/7 ke atas) → terbaru; device & simulator.
 - Login siswa (`NIS` + kata sandi) & wali (`NISN` siswa + `NIK` wali) ke SIM SIAPOS.
+- "Simpan sandi?" gaya Google: kredensial terenkripsi di Keystore/Keychain
+  (`lib/core/credential_store.dart`, `flutter_secure_storage`) dan terisi otomatis di login berikutnya.
 - Backend: `https://sim.mtsbutambakberas.sch.id`
 - Kontrak login: `POST app/api/apk/siswa/login` dengan JSON `{username, password, role}`.
 
@@ -87,6 +89,7 @@ armeabi-v7a; x86_64 dipisah untuk emulator) — sertifikat resmi SHA-256
 - `lib/auth/login_page.dart` — login siswa/wali (label sesuai kontrak server).
 - `lib/tabs/beranda_tab.dart` — beranda + penanganan error dashboard.
 - `lib/core/api.dart`, `lib/core/session.dart` — klien API & sesi.
+- `lib/core/credential_store.dart` — sandi tersimpan terenkripsi (Keystore/Keychain).
 - `docs/build-arm64.md` — resep lengkap build arm64 (termasuk injeksi lib).
 
 ## Testing

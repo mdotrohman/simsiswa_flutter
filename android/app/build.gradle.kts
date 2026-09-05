@@ -28,8 +28,8 @@ android {
         applicationId = "id.co.mtsbutambakberas.simsiswa_flutter"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = 12
-        versionName = "1.10"
+        versionCode = 13
+        versionName = "1.11"
     }
 
     signingConfigs {
@@ -66,4 +66,11 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Kelas anotasi yang dirujuk Tink (dipakai flutter_secure_storage) hilang
+    // saat R8 di release; sertakan agar shrinker tidak gagal.
+    implementation("com.google.code.findbugs:jsr305:3.0.2")
+    implementation("com.google.errorprone:error_prone_annotations:2.30.0")
 }
