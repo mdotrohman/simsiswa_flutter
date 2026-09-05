@@ -34,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _error = null);
 
     if (username.isEmpty) {
-      setState(() => _error = _role == 'siswa' ? 'NIS wajib diisi' : 'NIK wali wajib diisi');
+      setState(() => _error = _role == 'siswa' ? 'NIS wajib diisi' : 'NISN wajib diisi');
       return;
     }
     if (password.isEmpty) {
@@ -178,8 +178,9 @@ class _LoginPageState extends State<LoginPage> {
             keyboardType: TextInputType.text,
             textInputAction: TextInputAction.next,
             decoration: InputDecoration(
-              labelText: _role == 'siswa' ? 'NIS' : 'NIK Wali',
-              hintText: _role == 'siswa' ? 'Masukkan NIS' : 'Masukkan NIK wali',
+              labelText: _role == 'siswa' ? 'NIS' : 'NISN',
+              hintText: _role == 'siswa' ? 'Masukkan NIS siswa' : 'Masukkan NISN siswa',
+              helperText: _role == 'wali' ? 'Isi dengan NISN anak Anda' : null,
               prefixIcon: const Icon(Icons.person_outline),
               filled: true,
               fillColor: kBackground,
@@ -201,8 +202,9 @@ class _LoginPageState extends State<LoginPage> {
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => _attemptLogin(),
             decoration: InputDecoration(
-              labelText: 'Password',
-              hintText: 'Masukkan password',
+              labelText: _role == 'wali' ? 'NIK Wali' : 'Password',
+              hintText: _role == 'wali' ? 'Masukkan NIK orang tua/wali' : 'Masukkan password',
+              helperText: _role == 'wali' ? 'NIK 16 digit pemilik akun wali' : null,
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
                 icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined),
