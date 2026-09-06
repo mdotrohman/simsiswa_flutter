@@ -129,33 +129,146 @@ class _OldBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final bowlColor = dark ? const Color(0xFF00543F) : const Color(0xFF00755A);
+
     return Container(
       height: 74,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kNavGreen,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: dark ? 0.45 : 0.16),
+            blurRadius: 12,
+            offset: const Offset(0, -2),
+          ),
+        ],
       ),
       clipBehavior: Clip.none,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          for (var i = 0; i < _MainShellState._items.length; i++)
-            Expanded(
-              child: InkWell(
-                onTap: () => onSelect(i),
-                splashColor: Colors.white24,
-                borderRadius: BorderRadius.circular(12),
-                child: _OldNavItem(
-                  icon: _MainShellState._items[i].$1,
-                  label: _MainShellState._items[i].$2,
-                  active: i == selected,
-                ),
-              ),
+          // Busur penuh di belakang item aktif: semi-circle besar menonjol
+          // keluar dari tepi atas bar hijau (efek "notch"/V yang jelas).
+          Positioned.fill(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                if (selected >= _MainShellState._items.length ||
+                    selected == 5) {
+                  return const SizedBox.shrink();
+                }
+                final cell = constraints.maxWidth /
+                    _MainShellState._items.length;
+                final cx = selected * cell + cell / 2;
+                // Busur ditarik pada tepi atas bar, membesar ke atas halaman.
+                return CustomPaint(
+                  painter: _BowlAtEdgePainter(
+                    cx: cx,
+                    bandColor: bowlColor,
+                    glowColor: _kActiveDisc.withValues(alpha: 0.22),
+                    rimColor: const Color(0xFF34D399),
+                    arcRadius: 46,
+                    bandThickness: 16,
+                    rimThickness: 3.5,
+                  ),
+                  size: Size(constraints.maxWidth, constraints.maxHeight),
+                );
+              },
             ),
+          ),
+          // Ikon/ring aktif render di atas busur.
+          Positioned.fill(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (var i = 0; i < _MainShellState._items.length; i++)
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => onSelect(i),
+                      splashColor: Colors.white24,
+                      borderRadius: BorderRadius.circular(12),
+                      child: _OldNavItem(
+                        icon: _MainShellState._items[i].$1,
+                        label: _MainShellState._items[i].$2,
+                        active: i == selected,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
+}
+
+/// Busur "notch" yang ditarik pada tepi atas bar hijau, mengelilingi item
+/// aktif (semi-circle penuh membesar ke atas halaman). Pita tebal + rim
+/// + glow → lengkungannya sangat kontras dan terlihat seperti "V".
+class _BowlAtEdgePainter extends CustomPainter {
+  _BowlAtEdgePainter({
+    required this.cx,
+    required this.bandColor,
+    required this.glowColor,
+    required this.rimColor,
+    required this.arcRadius,
+    required this.bandThickness,
+    required this.rimThickness,
+  });
+
+  final double cx;
+  final Color bandColor;
+  final Color glowColor;
+  final Color rimColor;
+  final double arcRadius;
+  final double bandThickness;
+  final double rimThickness;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final r = arcRadius;
+    // Pusat busur tepat di tepi atas bar (y=0) → setengah-lingkaran membesar
+    // ke ATAS halaman, sehingga lengkungannya muncul jelas seperti "V"/notch
+    // dari belakang menu aktif. Busur atas: dari (cx-r, 0) membalik ke atas
+    // lalu turun ke (cx+r, 0), "mulut" terbuka rata di dasar bar.
+    final rect = Rect.fromCircle(center: Offset(cx, 0), radius: r);
+
+    // 1. Glow lembut semi-circle menonjol ke atas halaman.
+    final glow = Paint()
+      ..style = PaintingStyle.fill
+      ..color = glowColor
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
+    final glowPath = Path()
+      ..addArc(rect.inflate(14), math.pi, math.pi)
+      ..close();
+    canvas.drawPath(glowPath, glow);
+
+    // 2. Pita tebal hijau lebih terang: busur setengah-atas.
+    final band = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = bandThickness
+      ..strokeCap = StrokeCap.round
+      ..color = bandColor;
+    canvas.drawArc(rect, math.pi, math.pi, false, band);
+
+    // 3. Rim emerald di sisi dalam — bingkai tajam pemisah antara busur dan
+    //    piring ikon.
+    final rimRect = rect.deflate(bandThickness / 2 - 1);
+    final rim = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = rimThickness
+      ..strokeCap = StrokeCap.round
+      ..color = rimColor;
+    canvas.drawArc(rimRect, math.pi, math.pi, false, rim);
+  }
+
+  @override
+  bool shouldRepaint(_BowlAtEdgePainter oldDelegate) =>
+      oldDelegate.cx != cx ||
+      oldDelegate.bandColor != bandColor ||
+      oldDelegate.arcRadius != arcRadius;
 }
 
 class _OldNavItem extends StatelessWidget {
@@ -178,8 +291,8 @@ class _OldNavItem extends StatelessWidget {
         // (tidak terlalu tinggi agar busur setengah-lingkaran masih menyilang
         // area bar hijau dan terlihat jelas).
         AnimatedSlide(
-          offset: active ? const Offset(0, -0.35) : Offset.zero,
-          duration: const Duration(milliseconds: 260),
+          offset: active ? const Offset(0, -0.22) : Offset.zero,
+          duration: const Duration(milliseconds: 300),
           curve: Curves.easeOutCubic,
           child: SizedBox(
             width: 62,
@@ -187,26 +300,7 @@ class _OldNavItem extends StatelessWidget {
             child: Stack(
               alignment: Alignment.center,
               clipBehavior: Clip.none,
-              children: [
-                // "Bowl" aktif: setengah-lingkaran besar yang PERSISTEN saat
-                // aktif (tidak mengecil setelah disentuh). Glow emerald lembut
-                // di belakang + pita tebal sewarna background halaman (look
-                // "cutout") + rim emerald tipis agar terlihat premium.
-                AnimatedScale(
-                  scale: active ? 1.0 : 0.001,
-                  duration: const Duration(milliseconds: 340),
-                  curve: Curves.easeOutBack,
-                  child: CustomPaint(
-                    painter: _ActiveBowlPainter(
-                      bandColor: Theme.of(context).scaffoldBackgroundColor,
-                      glowColor: _kActiveDisc.withValues(alpha: 0.34),
-                      rimColor: const Color(0xFF34D399),
-                      bandThickness: 16,
-                      rimThickness: 3,
-                    ),
-                    child: const SizedBox(width: 118, height: 118),
-                  ),
-                ),
+children: [
                 // Piring aktif: satu aksen emerald bersih + rim tipis.
                 AnimatedScale(
                   scale: active ? 1.30 : 0.001,
@@ -269,73 +363,4 @@ class _OldNavItem extends StatelessWidget {
       ],
     );
   }
-}
-
-/// Bowl aktif: setengah-lingkaran (semi-circle) besar yang selalu tampil
-/// penuh selama item aktif. Terdiri dari 3 lapisan:
-///   1. glow emerald lembut (fill + blur) — premium,
-///   2. pita tebal sewarna background halaman — efek "cutout" menyatu
-///      dengan halaman (look app lama, tapi diperbesar),
-///   3. rim emerald tipis di sisi dalam pita — bingkai yang tajam.
-/// Atas sepenuhnya transparan.
-class _ActiveBowlPainter extends CustomPainter {
-  const _ActiveBowlPainter({
-    required this.bandColor,
-    required this.glowColor,
-    required this.rimColor,
-    required this.bandThickness,
-    required this.rimThickness,
-  });
-
-  final Color bandColor;
-  final Color glowColor;
-  final Color rimColor;
-  final double bandThickness;
-  final double rimThickness;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Pusat busur diberi margin sebesar tebal pita agar stroke tidak terpotong.
-    final rect = Rect.fromLTWH(
-      bandThickness,
-      bandThickness,
-      size.width - bandThickness * 2,
-      size.height - bandThickness * 2,
-    );
-
-    // 1. Glow lembut (fill blur) — membesar sedikit di luar pita.
-    final glow = Paint()
-      ..style = PaintingStyle.fill
-      ..color = glowColor
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
-    final glowPath = Path()
-      ..addArc(rect.inflate(16), 0, math.pi)
-      ..close();
-    canvas.drawPath(glowPath, glow);
-
-    // 2. Pita tebal sewarna background halaman (setengah-lingkaran utama).
-    final band = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = bandThickness
-      ..strokeCap = StrokeCap.round
-      ..color = bandColor;
-    canvas.drawArc(rect, 0, math.pi, false, band);
-
-    // 3. Rim emerald tipis di sisi dalam, tepat menempel tepi piring ikon.
-    final rimRect = rect.deflate(bandThickness / 2 - 1);
-    final rim = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = rimThickness
-      ..strokeCap = StrokeCap.round
-      ..color = rimColor;
-    canvas.drawArc(rimRect, 0, math.pi, false, rim);
-  }
-
-  @override
-  bool shouldRepaint(_ActiveBowlPainter oldDelegate) =>
-      oldDelegate.bandColor != bandColor ||
-      oldDelegate.glowColor != glowColor ||
-      oldDelegate.rimColor != rimColor ||
-      oldDelegate.bandThickness != bandThickness ||
-      oldDelegate.rimThickness != rimThickness;
 }
