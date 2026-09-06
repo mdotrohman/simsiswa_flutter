@@ -56,15 +56,40 @@ class LoginData {
       userId: (json['user_id'] as num?)?.toInt() ?? 0,
       token: s(json['token']),
       username: s(json['username']),
-      name: s(json['name']),
+      name: s(json['name'] ?? json['nama_lengkap']),
       nis: s(json['nis']),
       nisn: s(json['nisn']),
       waliNama: s(json['wali_nama']),
-      status: s(json['status']),
-      kelas: s(json['kelas']),
+      status: s(json['status'] ?? json['status_siswa']),
+      kelas: s(json['kelas'] ?? json['nama_kelas']),
       tempatLahir: s(json['tempat_lahir']),
       tanggalLahir: s(json['tanggal_lahir']),
-      alamat: s(json['alamat']),
+      alamat: _composeAlamat(json, s(json['alamat'])),
     );
+  }
+
+  /// Menyusun alamat rumah lengkap dari bagian-bagiannya (bila server
+  /// mengirimnya terpisah di login), pola sama dengan endpoint profil siswa.
+  static String _composeAlamat(Map<String, dynamic> j, String raw) {
+    final parts = <String>[];
+    if (raw.isNotEmpty) parts.add(raw);
+    final rt = (j['rt']?.toString() ?? '').trim();
+    final rw = (j['rw']?.toString() ?? '').trim();
+    if (rt.isNotEmpty || rw.isNotEmpty) {
+      if (rt.isNotEmpty && rw.isNotEmpty) {
+        parts.add('RT $rt/RW $rw');
+      } else if (rt.isNotEmpty) {
+        parts.add('RT $rt');
+      } else {
+        parts.add('RW $rw');
+      }
+    }
+    for (final key in ['desa_kelurahan', 'kecamatan', 'kabupaten_kota', 'provinsi']) {
+      final v = (j[key]?.toString() ?? '').trim();
+      if (v.isNotEmpty) parts.add(v);
+    }
+    final kp = (j['kode_pos']?.toString() ?? '').trim();
+    if (kp.isNotEmpty) parts.add(kp);
+    return parts.join(', ');
   }
 }
