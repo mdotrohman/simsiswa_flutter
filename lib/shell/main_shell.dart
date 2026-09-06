@@ -186,6 +186,22 @@ class _OldNavItem extends StatelessWidget {
               alignment: Alignment.center,
               clipBehavior: Clip.none,
               children: [
+                // Kilatan putih (mimikri splash/ink saat disentuh): semi-lingkaran
+                // lembut di bawah menu aktif — TAMPIL PERSISTEN selama aktif,
+                // tidak hanya saat disentuh. Ditahan tetap rendah (kompensasi
+                // slide blok ikon yang naik) supaya "duduk" di bar hijau.
+                AnimatedOpacity(
+                  opacity: active ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 320),
+                  curve: Curves.easeOut,
+                  child: Transform.translate(
+                    offset: const Offset(0, 21),
+                    child: CustomPaint(
+                      painter: const _WhiteFlashPainter(),
+                      child: const SizedBox(width: 90, height: 90),
+                    ),
+                  ),
+                ),
                 // Ring "cradle" aktif: busur bawah tebal sewarna background
                 // halaman (menempel ke bar, tanpa kesan mengambang), atas
                 // sepenuhnya transparan.
@@ -259,6 +275,45 @@ class _OldNavItem extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Kilatan putih persisten — meniru splash/ink putih yang muncul saat
+/// disentuh, tapi TETAP TAMPIL selama menu aktif. Digambar sebagai lingkaran
+/// radial lembut (center pekat, tepi pudar); karena posisinya ditahan di
+/// bagian bawah blok ikon, bagian yang terlihat adalah "setengah lingkaran
+/// putih" yang duduk di bar hijau di bawah menu aktif.
+class _WhiteFlashPainter extends CustomPainter {
+  const _WhiteFlashPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+    final paint = Paint()
+      ..shader = const RadialGradient(
+        colors: [Color(0x4DFFFFFF), Color(0x22FFFFFF), Colors.transparent],
+        stops: [0.0, 0.5, 1.0],
+      ).createShader(rect);
+    canvas.drawCircle(center, radius, paint);
+
+    // Inti kecil lebih pekat di area bawah-tengah (tempat "splash" terasa).
+    final corePaint = Paint()
+      ..shader = RadialGradient(
+        colors: [Colors.white.withValues(alpha: 0.22), Colors.transparent],
+      ).createShader(Rect.fromCircle(
+        center: Offset(size.width / 2, size.height / 2 + 8),
+        radius: radius * 0.45,
+      ));
+    canvas.drawCircle(
+      Offset(size.width / 2, size.height / 2 + 8),
+      radius * 0.45,
+      corePaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_WhiteFlashPainter oldDelegate) => false;
 }
 
 /// Ring "cradle" aktif: busur setengah bawah (semi-circle) tebal, atas
