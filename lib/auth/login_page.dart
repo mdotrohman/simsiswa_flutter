@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/api.dart';
 import '../core/credential_store.dart';
 import '../core/session.dart';
+import '../index/index_page.dart';
 import '../shell/main_shell.dart';
 
 class LoginPage extends StatefulWidget {
@@ -139,6 +140,15 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  void _goToBeranda() {
+    final nav = Navigator.of(context);
+    if (nav.canPop()) {
+      nav.pop();
+    } else {
+      nav.pushReplacement(MaterialPageRoute(builder: (_) => const IndexPage()));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = Theme.of(context).colorScheme;
@@ -152,38 +162,82 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const _Logo(),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'SIM Siswa MTsBU',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: _berandaButton(),
+                ),
+                Expanded(
+                  child: Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const _Logo(),
+                          const SizedBox(height: 20),
+                          const Text(
+                            'SIM Siswa MTsBU',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'MTs Bustanul Ulum Tambakberas Jombang',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white70, fontSize: 13),
+                          ),
+                          const SizedBox(height: 28),
+                          _buildCard(),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'v1.27 Premium',
+                            style: TextStyle(color: Colors.white54, fontSize: 12),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'MTs Bustanul Ulum Tambakberas Jombang',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
-                  const SizedBox(height: 28),
-                  _buildCard(),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'v1.26 Premium',
-                    style: TextStyle(color: Colors.white54, fontSize: 12),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _berandaButton() {
+    return Material(
+      color: Colors.white.withValues(alpha: 0.14),
+      shape: StadiumBorder(
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.35)),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: _goToBeranda,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.home_rounded, size: 17, color: Colors.white),
+              SizedBox(width: 6),
+              Text(
+                'Beranda',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
       ),

@@ -5,11 +5,13 @@ lama untuk siswa & wali. Satu codebase Flutter.
 
 ## Fitur
 
-- **Halaman index (portal)**: menampilkan profil publik madrasah sebelum login —
-  nama, tagline, alamat, statistik siswa/guru/rombel + periode, kartu identitas
-  (NPSN, NSM, akreditasi, kepala, kurikulum), informasi, kontak, dan media sosial
-  yang bisa dibuka langsung. Data dari `GET app/api/apk/siswa/public_profil`
-  (kontrak sama dengan aplikasi versi lama).
+- **Halaman index (portal)**: hanya untuk pengunjung yang **belum login** — menampilkan
+  profil publik madrasah (nama, tagline, alamat, statistik siswa/guru/rombel + periode,
+  kartu identitas, informasi, kontak, dan media sosial yang bisa dibuka langsung). Data
+  dari `GET app/api/apk/siswa/public_profil` (kontrak sama dengan aplikasi versi lama).
+  Tombol **Masuk** menuju halaman login; dari login tersedia tombol **Beranda** untuk
+  kembali ke index. Pengguna yang sudah login **langsung** masuk ke menu utama
+  (index dilewati).
 - **Tema Material You**: seluruh pewarnaan (background, appbar, nav, kartu, login)
   mengikuti color scheme wallpaper Android; fallback ke seed emerald brand bila
   dynamic color tak tersedia.

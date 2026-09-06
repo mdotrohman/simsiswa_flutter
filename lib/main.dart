@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'core/session.dart';
 import 'core/theme.dart';
 import 'index/index_page.dart';
+import 'shell/main_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,7 +73,8 @@ class _HomeState extends State<_Home> {
     if (!Session.ready) {
       return const _BootSplash();
     }
-    return const IndexPage();
+    // Halaman index hanya untuk yang belum login; yang sudah login langsung ke menu.
+    return Session.isLoggedIn() ? const MainShell() : const IndexPage();
   }
 }
 

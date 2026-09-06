@@ -3,9 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../auth/login_page.dart';
 import '../core/api.dart';
-import '../core/session.dart';
 import '../models/profil.dart';
-import '../shell/main_shell.dart';
 
 /// Halaman index (portal) — menampilkan profil publik madrasah sebelum masuk ke
 /// login (mengikuti konsep SplashActivity di aplikasi Java versi lama).
@@ -74,10 +72,10 @@ class _IndexPageState extends State<IndexPage> {
         .showSnackBar(SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating));
   }
 
-  void _continueIntoApp() {
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
-      builder: (_) => Session.isLoggedIn() ? const MainShell() : const LoginPage(),
-    ));
+  void _goToLogin() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+    );
   }
 
   @override
@@ -91,23 +89,35 @@ class _IndexPageState extends State<IndexPage> {
         child: Column(
           children: [
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.only(bottom: 16),
-                children: [
-                  _hero(s, profil),
-                  if (_loading)
-                    _loadingCard(s)
-                  else if (_error != null)
-                    _errorCard(s, _error!)
-                  else ...[
-                    if (statistik != null) _statisticsCard(s, statistik),
-                    _identityCard(s, profil),
-                    _informasiCard(s, profil),
-                    _kontakCard(s, profil),
-                    _socialCard(s, profil),
-                    const SizedBox(height: 8),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: const Duration(milliseconds: 450),
+                curve: Curves.easeOutCubic,
+                builder: (context, t, child) => Opacity(
+                  opacity: t,
+                  child: Transform.translate(
+                    offset: Offset(0, 20 * (1 - t)),
+                    child: child,
+                  ),
+                ),
+                child: ListView(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  children: [
+                    _hero(s, profil),
+                    if (_loading)
+                      _loadingCard(s)
+                    else if (_error != null)
+                      _errorCard(s, _error!)
+                    else ...[
+                      if (statistik != null) _statisticsCard(s, statistik),
+                      _identityCard(s, profil),
+                      _informasiCard(s, profil),
+                      _kontakCard(s, profil),
+                      _socialCard(s, profil),
+                      const SizedBox(height: 8),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
             _bottomBar(s),
@@ -584,7 +594,6 @@ class _IndexPageState extends State<IndexPage> {
   }
 
   Widget _bottomBar(ColorScheme s) {
-    final label = Session.isLoggedIn() ? 'Buka Aplikasi' : 'Masuk / Daftar';
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       decoration: BoxDecoration(
@@ -594,14 +603,47 @@ class _IndexPageState extends State<IndexPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          FilledButton.icon(
-            onPressed: _continueIntoApp,
-            icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-            label: Text(label),
-            style: FilledButton.styleFrom(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(18),
+            child: Ink(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [s.primary, Color.lerp(s.primary, Colors.black, 0.3)!],
+                ),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: s.primary.withValues(alpha: 0.35),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(18),
+                onTap: _goToLogin,
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 17),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Masuk',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Icon(Icons.arrow_forward_rounded, size: 20, color: Colors.white),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 8),
