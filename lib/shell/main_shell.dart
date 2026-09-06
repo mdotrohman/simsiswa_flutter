@@ -98,19 +98,19 @@ class _MainShellState extends State<MainShell> {
 
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: 4,
+        titleSpacing: 20,
         title: Row(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(8),
               child: Image.asset(
                 'assets/images/ic_logo.png',
-                width: 30,
-                height: 30,
+                width: 40,
+                height: 40,
                 fit: BoxFit.cover,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 14),
             Text(_titles[_index]),
           ],
         ),
