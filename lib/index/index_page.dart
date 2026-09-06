@@ -462,29 +462,29 @@ class _IndexPageState extends State<IndexPage> {
       s,
       title: 'Media Sosial',
       icon: Icons.public_rounded,
-      child: GridView.count(
-        crossAxisCount: 3,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-        childAspectRatio: 1.6,
-        children: [
-          for (final e in sosmed)
-            _socialChip(
-              s,
-              name: e.$1,
-              icon: e.$2,
-              glyph: e.$3,
-              colors: e.$4,
-              onTap: () => _launchWeb(e.$5),
-            ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            for (final e in sosmed)
+              _socialBubble(
+                s,
+                name: e.$1,
+                icon: e.$2,
+                glyph: e.$3,
+                colors: e.$4,
+                onTap: () => _launchWeb(e.$5),
+              ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _socialChip(
+  Widget _socialBubble(
     ColorScheme s, {
     required String name,
     IconData? icon,
@@ -492,53 +492,32 @@ class _IndexPageState extends State<IndexPage> {
     required List<Color> colors,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(15),
-      child: Ink(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: colors,
-          ),
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
-          boxShadow: [
-            BoxShadow(
-              color: colors.first.withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(15),
-          onTap: onTap,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (glyph != null)
-                Text(glyph,
-                    style: const TextStyle(
-                        color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800))
-              else
-                Icon(icon, color: Colors.white, size: 19),
-              const SizedBox(height: 5),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.95),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+    final brand = colors.first;
+    return Tooltip(
+      message: name,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: brand.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+            border: Border.all(color: brand.withValues(alpha: 0.28)),
+            boxShadow: [
+              BoxShadow(
+                color: brand.withValues(alpha: 0.12),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
               ),
             ],
+          ),
+          child: Center(
+            child: glyph != null
+                ? Text(glyph,
+                    style: TextStyle(
+                        color: brand, fontSize: 14, fontWeight: FontWeight.w800))
+                : Icon(icon, color: brand, size: 19),
           ),
         ),
       ),
