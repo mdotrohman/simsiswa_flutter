@@ -129,146 +129,33 @@ class _OldBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final bowlColor = dark ? const Color(0xFF00543F) : const Color(0xFF00755A);
-
     return Container(
       height: 74,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: _kNavGreen,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: dark ? 0.45 : 0.16),
-            blurRadius: 12,
-            offset: const Offset(0, -2),
-          ),
-        ],
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       clipBehavior: Clip.none,
-      child: Stack(
-        clipBehavior: Clip.none,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // Busur penuh di belakang item aktif: semi-circle besar menonjol
-          // keluar dari tepi atas bar hijau (efek "notch"/V yang jelas).
-          Positioned.fill(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                if (selected >= _MainShellState._items.length ||
-                    selected == 5) {
-                  return const SizedBox.shrink();
-                }
-                final cell = constraints.maxWidth /
-                    _MainShellState._items.length;
-                final cx = selected * cell + cell / 2;
-                // Busur ditarik pada tepi atas bar, membesar ke atas halaman.
-                return CustomPaint(
-                  painter: _BowlAtEdgePainter(
-                    cx: cx,
-                    bandColor: bowlColor,
-                    glowColor: _kActiveDisc.withValues(alpha: 0.22),
-                    rimColor: const Color(0xFF34D399),
-                    arcRadius: 46,
-                    bandThickness: 16,
-                    rimThickness: 3.5,
-                  ),
-                  size: Size(constraints.maxWidth, constraints.maxHeight),
-                );
-              },
+          for (var i = 0; i < _MainShellState._items.length; i++)
+            Expanded(
+              child: InkWell(
+                onTap: () => onSelect(i),
+                splashColor: Colors.white24,
+                borderRadius: BorderRadius.circular(12),
+                child: _OldNavItem(
+                  icon: _MainShellState._items[i].$1,
+                  label: _MainShellState._items[i].$2,
+                  active: i == selected,
+                ),
+              ),
             ),
-          ),
-          // Ikon/ring aktif render di atas busur.
-          Positioned.fill(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                for (var i = 0; i < _MainShellState._items.length; i++)
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => onSelect(i),
-                      splashColor: Colors.white24,
-                      borderRadius: BorderRadius.circular(12),
-                      child: _OldNavItem(
-                        icon: _MainShellState._items[i].$1,
-                        label: _MainShellState._items[i].$2,
-                        active: i == selected,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
         ],
       ),
     );
   }
-}
-
-/// Busur "notch" yang ditarik pada tepi atas bar hijau, mengelilingi item
-/// aktif (semi-circle penuh membesar ke atas halaman). Pita tebal + rim
-/// + glow → lengkungannya sangat kontras dan terlihat seperti "V".
-class _BowlAtEdgePainter extends CustomPainter {
-  _BowlAtEdgePainter({
-    required this.cx,
-    required this.bandColor,
-    required this.glowColor,
-    required this.rimColor,
-    required this.arcRadius,
-    required this.bandThickness,
-    required this.rimThickness,
-  });
-
-  final double cx;
-  final Color bandColor;
-  final Color glowColor;
-  final Color rimColor;
-  final double arcRadius;
-  final double bandThickness;
-  final double rimThickness;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final r = arcRadius;
-    // Pusat busur tepat di tepi atas bar (y=0) → setengah-lingkaran membesar
-    // ke ATAS halaman, sehingga lengkungannya muncul jelas seperti "V"/notch
-    // dari belakang menu aktif. Busur atas: dari (cx-r, 0) membalik ke atas
-    // lalu turun ke (cx+r, 0), "mulut" terbuka rata di dasar bar.
-    final rect = Rect.fromCircle(center: Offset(cx, 0), radius: r);
-
-    // 1. Glow lembut semi-circle menonjol ke atas halaman.
-    final glow = Paint()
-      ..style = PaintingStyle.fill
-      ..color = glowColor
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
-    final glowPath = Path()
-      ..addArc(rect.inflate(14), math.pi, math.pi)
-      ..close();
-    canvas.drawPath(glowPath, glow);
-
-    // 2. Pita tebal hijau lebih terang: busur setengah-atas.
-    final band = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = bandThickness
-      ..strokeCap = StrokeCap.round
-      ..color = bandColor;
-    canvas.drawArc(rect, math.pi, math.pi, false, band);
-
-    // 3. Rim emerald di sisi dalam — bingkai tajam pemisah antara busur dan
-    //    piring ikon.
-    final rimRect = rect.deflate(bandThickness / 2 - 1);
-    final rim = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = rimThickness
-      ..strokeCap = StrokeCap.round
-      ..color = rimColor;
-    canvas.drawArc(rimRect, math.pi, math.pi, false, rim);
-  }
-
-  @override
-  bool shouldRepaint(_BowlAtEdgePainter oldDelegate) =>
-      oldDelegate.cx != cx ||
-      oldDelegate.bandColor != bandColor ||
-      oldDelegate.arcRadius != arcRadius;
 }
 
 class _OldNavItem extends StatelessWidget {
@@ -287,12 +174,10 @@ class _OldNavItem extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        // Blok ikon (piring aktif + ikon) melayang ~35% ke atas saat aktif
-        // (tidak terlalu tinggi agar busur setengah-lingkaran masih menyilang
-        // area bar hijau dan terlihat jelas).
+        // Blok ikon (piring aktif + ikon) melayang 50% ke atas saat aktif.
         AnimatedSlide(
-          offset: active ? const Offset(0, -0.22) : Offset.zero,
-          duration: const Duration(milliseconds: 300),
+          offset: active ? const Offset(0, -0.5) : Offset.zero,
+          duration: const Duration(milliseconds: 260),
           curve: Curves.easeOutCubic,
           child: SizedBox(
             width: 62,
@@ -300,7 +185,18 @@ class _OldNavItem extends StatelessWidget {
             child: Stack(
               alignment: Alignment.center,
               clipBehavior: Clip.none,
-children: [
+              children: [
+                // Ring "cradle" aktif: busur bawah tebal sewarna background
+                // halaman (menempel ke bar, tanpa kesan mengambang), atas
+                // sepenuhnya transparan.
+                if (active)
+                  CustomPaint(
+                    painter: _CradleRingPainter(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      thickness: 16,
+                    ),
+                    child: const SizedBox(width: 82, height: 82),
+                  ),
                 // Piring aktif: satu aksen emerald bersih + rim tipis.
                 AnimatedScale(
                   scale: active ? 1.30 : 0.001,
@@ -363,4 +259,34 @@ children: [
       ],
     );
   }
+}
+
+/// Ring "cradle" aktif: busur setengah bawah (semi-circle) tebal, atas
+/// transparan penuh — menyatu dengan background halaman.
+class _CradleRingPainter extends CustomPainter {
+  _CradleRingPainter({required this.color, required this.thickness});
+
+  final Color color;
+  final double thickness;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = thickness
+      ..color = color
+      ..strokeCap = StrokeCap.round;
+    final rect = Rect.fromLTWH(
+      thickness / 2,
+      thickness / 2,
+      size.width - thickness,
+      size.height - thickness,
+    );
+    // Busur bawah: dari kanan lewat dasar ke kiri (atas terbuka/transparan).
+    canvas.drawArc(rect, 0, math.pi, false, paint);
+  }
+
+  @override
+  bool shouldRepaint(_CradleRingPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.thickness != thickness;
 }
