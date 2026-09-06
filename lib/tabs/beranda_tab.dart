@@ -245,20 +245,22 @@ class _BerandaTabState extends State<BerandaTab> {
             ],
           ),
           const SizedBox(height: 14),
-          _nisNisnCard(),
-          if (Session.kelas.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _heroTile(
-                  icon: Icons.segment_outlined,
-                  label: 'Kelas',
-                  value: Session.kelas,
-                ),
-              ],
-            ),
-          ],
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _heroTile(
+                icon: Icons.badge_outlined,
+                label: 'NIS / NISN',
+                value: _nisNisn,
+              ),
+              const SizedBox(width: 8),
+              _heroTile(
+                icon: Icons.cake_outlined,
+                label: 'Tempat & Tanggal Lahir',
+                value: _ttl,
+              ),
+            ],
+          ),
           if (Session.alamat.isNotEmpty) ...[
             const SizedBox(height: 8),
             Row(
@@ -277,10 +279,19 @@ class _BerandaTabState extends State<BerandaTab> {
     );
   }
 
+  String get _nisNisn {
+    final n = Session.nis.trim();
+    final nn = Session.nisn.trim();
+    if (n.isEmpty && nn.isEmpty) return '-';
+    if (n.isEmpty) return nn;
+    if (nn.isEmpty) return n;
+    return '$n / $nn';
+  }
+
   String get _ttl {
     final t = Session.tempatLahir.trim();
     final d = Session.tanggalLahir.trim();
-    if (t.isEmpty && d.isEmpty) return '';
+    if (t.isEmpty && d.isEmpty) return '-';
     if (t.isEmpty) return d;
     if (d.isEmpty) return t;
     return '$t, $d';
@@ -288,7 +299,6 @@ class _BerandaTabState extends State<BerandaTab> {
 
   Widget _identityBadge() {
     final status = Session.status.trim();
-    final ttl = _ttl;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -296,104 +306,18 @@ class _BerandaTabState extends State<BerandaTab> {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.verified_user, size: 13, color: Color(0xFF4ADE80)),
-              const SizedBox(width: 4),
-              Text(status.isEmpty ? 'Aktif' : status,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800)),
-            ],
-          ),
-          if (ttl.isNotEmpty) ...[
-            const SizedBox(height: 3),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.cake_outlined,
-                    size: 12, color: Colors.white.withValues(alpha: 0.75)),
-                const SizedBox(width: 4),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 150),
-                  child: Text(ttl,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w600)),
-                ),
-              ],
-            ),
-          ],
+          const Icon(Icons.verified_user, size: 13, color: Color(0xFF4ADE80)),
+          const SizedBox(width: 4),
+          Text(status.isEmpty ? 'Aktif' : status,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800)),
         ],
       ),
-    );
-  }
-
-  Widget _nisNisnCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.badge_outlined, size: 16, color: Colors.white),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: _miniData(
-                      'NIS', Session.nis.isEmpty ? '-' : Session.nis),
-                ),
-                Container(
-                  width: 1,
-                  height: 30,
-                  color: Colors.white.withValues(alpha: 0.25),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 12),
-                    child:
-                        _miniData('NISN', Session.nisn.isEmpty ? '-' : Session.nisn),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _miniData(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.72), fontSize: 10.5)),
-        const SizedBox(height: 2),
-        Text(value,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700)),
-      ],
     );
   }
 
