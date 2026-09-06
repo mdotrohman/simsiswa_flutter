@@ -197,7 +197,7 @@ class _LoginPageState extends State<LoginPage> {
                           _buildCard(),
                           const SizedBox(height: 16),
                           const Text(
-                            'v1.31 Premium',
+                            'v1.32 Premium',
                             style: TextStyle(color: Colors.white54, fontSize: 12),
                           ),
                         ],
@@ -383,20 +383,28 @@ class _Logo extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = Theme.of(context).colorScheme;
     return Container(
-      width: 96,
-      height: 96,
+      width: 100,
+      height: 100,
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: s.primary.withValues(alpha: 0.25),
-        shape: BoxShape.circle,
+        color: s.primary.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.white70, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 16,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
-      child: ClipOval(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(19),
         child: Image.asset(
           'assets/images/ic_logo.png',
           fit: BoxFit.cover,
-          width: 86,
-          height: 86,
+          width: 90,
+          height: 90,
         ),
       ),
     );

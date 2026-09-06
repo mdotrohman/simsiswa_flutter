@@ -97,7 +97,24 @@ class _MainShellState extends State<MainShell> {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: Text(_titles[_index])),
+      appBar: AppBar(
+        titleSpacing: 4,
+        title: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.asset(
+                'assets/images/ic_logo.png',
+                width: 30,
+                height: 30,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(_titles[_index]),
+          ],
+        ),
+      ),
       body: IndexedStack(index: _index, children: pages),
       bottomNavigationBar: SafeArea(
         top: false,

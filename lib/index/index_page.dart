@@ -185,27 +185,29 @@ class _IndexPageState extends State<IndexPage> {
       ),
       child: Column(
         children: [
-          // Emblem premium: cincin ganda + logo resmi
+          // Emblem premium: square melengkung + logo resmi
           Container(
-            width: 108,
-            height: 108,
+            width: 112,
+            height: 112,
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.14),
-                shape: BoxShape.circle,
-              ),
-              child: ClipOval(
-                child: Image.asset(
-                  'assets/images/ic_logo.png',
-                  fit: BoxFit.cover,
-                  width: 96,
-                  height: 96,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
                 ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(22),
+              child: Image.asset(
+                'assets/images/ic_logo.png',
+                fit: BoxFit.cover,
+                width: 100,
+                height: 100,
               ),
             ),
           ),

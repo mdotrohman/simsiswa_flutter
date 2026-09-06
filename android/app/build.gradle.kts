@@ -28,8 +28,8 @@ android {
         applicationId = "id.co.mtsbutambakberas.simsiswa_flutter"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = 33
-        versionName = "1.31"
+        versionCode = 34
+        versionName = "1.32"
     }
 
     signingConfigs {
