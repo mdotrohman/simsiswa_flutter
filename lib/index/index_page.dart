@@ -185,21 +185,28 @@ class _IndexPageState extends State<IndexPage> {
       ),
       child: Column(
         children: [
-          // Emblem premium: cincin ganda + logo
+          // Emblem premium: cincin ganda + logo resmi
           Container(
-            width: 96,
-            height: 96,
-            padding: const EdgeInsets.all(7),
+            width: 108,
+            height: 108,
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
             ),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.16),
+                color: Colors.white.withValues(alpha: 0.14),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.school_rounded, size: 48, color: Colors.white),
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/images/ic_logo.png',
+                  fit: BoxFit.cover,
+                  width: 96,
+                  height: 96,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 18),
@@ -466,8 +473,8 @@ class _IndexPageState extends State<IndexPage> {
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Wrap(
           alignment: WrapAlignment.center,
-          spacing: 12,
-          runSpacing: 12,
+          spacing: 16,
+          runSpacing: 16,
           children: [
             for (final e in sosmed)
               _socialBubble(
@@ -498,17 +505,17 @@ class _IndexPageState extends State<IndexPage> {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          width: 40,
-          height: 40,
+          width: 52,
+          height: 52,
           decoration: BoxDecoration(
             color: brand.withValues(alpha: 0.12),
             shape: BoxShape.circle,
             border: Border.all(color: brand.withValues(alpha: 0.28)),
             boxShadow: [
               BoxShadow(
-                color: brand.withValues(alpha: 0.12),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
+                color: brand.withValues(alpha: 0.14),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -516,8 +523,8 @@ class _IndexPageState extends State<IndexPage> {
             child: glyph != null
                 ? Text(glyph,
                     style: TextStyle(
-                        color: brand, fontSize: 14, fontWeight: FontWeight.w800))
-                : Icon(icon, color: brand, size: 19),
+                        color: brand, fontSize: 18, fontWeight: FontWeight.w800))
+                : Icon(icon, color: brand, size: 26),
           ),
         ),
       ),
