@@ -186,154 +186,187 @@ class _ProfilTabState extends State<ProfilTab> {
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 90,
-            height: 90,
-            padding: const EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withValues(alpha: 0.95),
-                  Colors.white.withValues(alpha: 0.2),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  blurRadius: 14,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: ClipOval(
-              child: useFoto
-                  ? Image.network(foto,
-                      width: 84,
-                      height: 84,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _initialAvatar(s, 84))
-                  : _initialAvatar(s, 84),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            _name,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _badge(Icons.badge_outlined, _roleLabel,
-                  Colors.white.withValues(alpha: 0.18)),
-              const SizedBox(width: 6),
-              _badge(Icons.verified_user, _status, const Color(0xFF1F7A3D)),
-            ],
-          ),
-          const SizedBox(height: 16),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _mini(s, 'NIS', _s('nis', Session.nis).isEmpty
-                  ? '-'
-                  : _s('nis', Session.nis)),
-              const SizedBox(width: 8),
-              _mini(s, 'NISN', _s('nisn', Session.nisn).isEmpty
-                  ? '-'
-                  : _s('nisn', Session.nisn)),
-              const SizedBox(width: 8),
-              _mini(s, 'Kelas', _kelas.isEmpty ? '-' : _kelas),
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
+                ),
+                child: useFoto
+                    ? ClipOval(
+                        child: Image.network(
+                          foto,
+                          width: 44,
+                          height: 44,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _heroInitial,
+                        ),
+                      )
+                    : _heroInitial,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            _name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              height: 1.15,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        _identityBadge(),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(_roleLabel,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700)),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-          if (_ttl.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                _mini(s, 'Tempat & Tanggal Lahir', _ttl),
-              ],
-            ),
-          ],
+          const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _heroTile(
+                icon: Icons.badge_outlined,
+                label: 'NIS / NISN',
+                value: _heroNisNisn,
+              ),
+              const SizedBox(width: 8),
+              _heroTile(
+                icon: Icons.cake_outlined,
+                label: 'Tempat & Tanggal Lahir',
+                value: _ttl.isEmpty ? '-' : _ttl,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _heroTile(
+                icon: Icons.home_outlined,
+                label: 'Alamat Rumah',
+                value: _fullAlamat.isEmpty ? '-' : _fullAlamat,
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _initialAvatar(ColorScheme s, double size) {
-    final initial = _name.isEmpty
-        ? 'S'
-        : _name.trim().characters.first.toUpperCase();
-    return Container(
-      width: size,
-      height: size,
-      color: Color.lerp(s.tertiary, Colors.black, 0.1),
-      child: Center(
-        child: Text(
-          initial,
-          style: TextStyle(
-            color: s.onTertiary,
-            fontSize: size * 0.42,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ),
-    );
+  String get _initial =>
+      _name.isEmpty ? 'S' : _name.trim().characters.first.toUpperCase();
+
+  Widget get _heroInitial => Center(
+        child: Text(_initial,
+            style: const TextStyle(
+                color: Colors.white,
+                fontSize: 19,
+                fontWeight: FontWeight.w800)),
+      );
+
+  String get _heroNisNisn {
+    final n = _s('nis', Session.nis).trim();
+    final nn = _s('nisn', Session.nisn).trim();
+    if (n.isEmpty && nn.isEmpty) return '-';
+    if (n.isEmpty) return nn;
+    if (nn.isEmpty) return n;
+    return '$n / $nn';
   }
 
-  Widget _badge(IconData icon, String label, Color bg) {
+  Widget _identityBadge() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(9),
+        color: Colors.white.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: Colors.white),
+          const Icon(Icons.verified_user, size: 13, color: Color(0xFF4ADE80)),
           const SizedBox(width: 4),
-          Text(label,
+          Text(_status.isEmpty ? 'Aktif' : _status,
               style: const TextStyle(
                   color: Colors.white,
                   fontSize: 11,
-                  fontWeight: FontWeight.w700)),
+                  fontWeight: FontWeight.w800)),
         ],
       ),
     );
   }
 
-  Widget _mini(ColorScheme s, String label, String value) {
+  Widget _heroTile({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.14),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Column(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label,
-                style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.72), fontSize: 10.5)),
-            const SizedBox(height: 2),
-            Text(value,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700)),
+            Icon(icon, size: 15, color: Colors.white.withValues(alpha: 0.9)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label,
+                      style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.72),
+                          fontSize: 10.5)),
+                  const SizedBox(height: 2),
+                  Text(value,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700)),
+                ],
+              ),
+            ),
           ],
         ),
       ),

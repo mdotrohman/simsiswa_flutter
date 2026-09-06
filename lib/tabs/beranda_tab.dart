@@ -197,50 +197,35 @@ class _BerandaTabState extends State<BerandaTab> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Flexible(
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 3),
-                            child: Text(
-                              'Assalamu\'alaikum,',
-                              style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.85),
-                                  fontSize: 12),
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        _identityBadge(),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Flexible(
                           child: Text(
                             Session.name.isEmpty ? 'Siswa' : Session.name,
-                            maxLines: 1,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
+                              height: 1.15,
                             ),
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Container(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(_roleLabel,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700)),
-                        ),
+                        _identityBadge(),
                       ],
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(_roleLabel,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700)),
                     ),
                   ],
                 ),
