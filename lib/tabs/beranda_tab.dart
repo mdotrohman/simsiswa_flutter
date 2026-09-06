@@ -51,7 +51,8 @@ class _BerandaTabState extends State<BerandaTab> {
           children: [
             _greetingCard(),
             const SizedBox(height: 20),
-            _sectionHeader('Menu Layanan', 'Akses cepat fitur', Icons.grid_view_rounded),
+            _sectionHeader('Menu Layanan', 'Akses cepat fitur', Icons.grid_view_rounded,
+                trailing: _allMenusBadge()),
             const SizedBox(height: 12),
             _menuGrid(),
             const SizedBox(height: 24),
@@ -72,7 +73,8 @@ class _BerandaTabState extends State<BerandaTab> {
   }
 
   // ------------------------------------------------------------------ header
-  Widget _sectionHeader(String title, String subtitle, IconData icon) {
+  Widget _sectionHeader(String title, String subtitle, IconData icon,
+      {Widget? trailing}) {
     final s = Theme.of(context).colorScheme;
     return Row(
       children: [
@@ -100,7 +102,47 @@ class _BerandaTabState extends State<BerandaTab> {
             ],
           ),
         ),
+        if (trailing != null) ...[
+          const SizedBox(width: 8),
+          trailing,
+        ],
       ],
+    );
+  }
+
+  Widget _allMenusBadge() {
+    final s = Theme.of(context).colorScheme;
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: _showAllMenus,
+      child: Ink(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color.lerp(s.primary, Colors.black, 0.25)!, s.primary],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: s.primary.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.apps_rounded, color: Colors.white, size: 15),
+            SizedBox(width: 5),
+            Text('Menu lainnya',
+                style: TextStyle(
+                    color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w800)),
+          ],
+        ),
+      ),
     );
   }
 
@@ -259,63 +301,10 @@ class _BerandaTabState extends State<BerandaTab> {
         crossAxisSpacing: 4,
         childAspectRatio: 0.85,
       ),
-      itemCount: items.length + 1,
+      itemCount: items.length,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemBuilder: (context, i) =>
-          i < items.length ? _menuTile(items[i]) : _allMenusGridTile(),
-    );
-  }
-
-  Widget _allMenusGridTile() {
-    final s = Theme.of(context).colorScheme;
-    return InkResponse(
-      radius: 42,
-      onTap: _showAllMenus,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color.lerp(s.primary, Colors.black, 0.3)!,
-                  s.primary,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: [
-                BoxShadow(
-                  color: s.primary.withValues(alpha: 0.35),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: const Stack(
-              alignment: Alignment.center,
-              children: [
-                Icon(Icons.apps_rounded, color: Colors.white, size: 30),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Menu lainnya',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: s.onSurface,
-            ),
-          ),
-        ],
-      ),
+      itemBuilder: (context, i) => _menuTile(items[i]),
     );
   }
 
