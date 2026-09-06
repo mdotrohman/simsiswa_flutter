@@ -190,12 +190,25 @@ class _BerandaTabState extends State<BerandaTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Assalamu\'alaikum,',
-                      style:
-                          TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Flexible(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 3),
+                            child: Text(
+                              'Assalamu\'alaikum,',
+                              style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                  fontSize: 12),
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        _identityBadge(),
+                      ],
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         Flexible(
@@ -229,55 +242,19 @@ class _BerandaTabState extends State<BerandaTab> {
                   ],
                 ),
               ),
-              const Icon(Icons.waving_hand, color: Colors.white, size: 24),
             ],
           ),
           const SizedBox(height: 14),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _heroTile(
-                icon: Icons.badge_outlined,
-                label: 'NIS',
-                value: Session.nis.isEmpty ? '-' : Session.nis,
-              ),
-              const SizedBox(width: 8),
-              _heroTile(
-                icon: Icons.perm_identity_outlined,
-                label: 'NISN',
-                value: Session.nisn.isEmpty ? '-' : Session.nisn,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _heroTile(
-                icon: Icons.verified_user_outlined,
-                label: 'Status',
-                value: Session.status.isEmpty ? 'Aktif' : Session.status,
-              ),
-              const SizedBox(width: 8),
-              if (Session.kelas.isNotEmpty)
-                _heroTile(
-                  icon: Icons.segment_outlined,
-                  label: 'Kelas',
-                  value: Session.kelas,
-                )
-              else
-                const Spacer(),
-            ],
-          ),
-          if (_ttl.isNotEmpty) ...[
+          _nisNisnCard(),
+          if (Session.kelas.isNotEmpty) ...[
             const SizedBox(height: 8),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _heroTile(
-                  icon: Icons.cake_outlined,
-                  label: 'Tempat & Tanggal Lahir',
-                  value: _ttl,
+                  icon: Icons.segment_outlined,
+                  label: 'Kelas',
+                  value: Session.kelas,
                 ),
               ],
             ),
@@ -307,6 +284,117 @@ class _BerandaTabState extends State<BerandaTab> {
     if (t.isEmpty) return d;
     if (d.isEmpty) return t;
     return '$t, $d';
+  }
+
+  Widget _identityBadge() {
+    final status = Session.status.trim();
+    final ttl = _ttl;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.verified_user, size: 13, color: Color(0xFF4ADE80)),
+              const SizedBox(width: 4),
+              Text(status.isEmpty ? 'Aktif' : status,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800)),
+            ],
+          ),
+          if (ttl.isNotEmpty) ...[
+            const SizedBox(height: 3),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.cake_outlined,
+                    size: 12, color: Colors.white.withValues(alpha: 0.75)),
+                const SizedBox(width: 4),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 150),
+                  child: Text(ttl,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600)),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _nisNisnCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.badge_outlined, size: 16, color: Colors.white),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: _miniData(
+                      'NIS', Session.nis.isEmpty ? '-' : Session.nis),
+                ),
+                Container(
+                  width: 1,
+                  height: 30,
+                  color: Colors.white.withValues(alpha: 0.25),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 12),
+                    child:
+                        _miniData('NISN', Session.nisn.isEmpty ? '-' : Session.nisn),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _miniData(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.72), fontSize: 10.5)),
+        const SizedBox(height: 2),
+        Text(value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700)),
+      ],
+    );
   }
 
   Widget _heroTile({
