@@ -111,4 +111,42 @@ class Api {
     }
     return (json['data'] as Map<String, dynamic>);
   }
+
+  /// Daftar pengumuman publik untuk siswa (POST app/api/apk/siswa/pengumuman).
+  /// Mengembalikan objek `data` berisi `list`, `total`, `page`, `per_page`.
+  static Future<Map<String, dynamic>> pengumumanList({
+    int page = 1,
+    int perPage = 20,
+  }) async {
+    final json = await _send('POST', 'app/api/apk/siswa/pengumuman', body: {
+      'aksi': 'list',
+      'siswa_id': Session.userId,
+      'page': page,
+      'per_page': perPage,
+    });
+    if (json['success'] != true || json['data'] is! Map) {
+      throw ApiException(
+          200, json['message']?.toString() ?? 'Gagal memuat pengumuman.');
+    }
+    return (json['data'] as Map<String, dynamic>);
+  }
+
+  /// Detail satu pengumuman (POST app/api/apk/siswa/pengumuman).
+  static Future<Map<String, dynamic>> pengumumanDetail(int id) async {
+    final json = await _send('POST', 'app/api/apk/siswa/pengumuman', body: {
+      'aksi': 'detail',
+      'siswa_id': Session.userId,
+      'id': id,
+    });
+    if (json['success'] != true || json['data'] is! Map) {
+      throw ApiException(
+          200, json['message']?.toString() ?? 'Pengumuman tidak ditemukan.');
+    }
+    final data = json['data'] as Map<String, dynamic>;
+    final detail = data['detail'];
+    if (detail is! Map) {
+      throw ApiException(200, 'Detail pengumuman tidak tersedia.');
+    }
+    return detail as Map<String, dynamic>;
+  }
 }
