@@ -28,14 +28,17 @@ class _BerandaTabState extends State<BerandaTab> {
     if (Session.role != 'siswa' || Session.userId <= 0 || _profilLoaded) return;
     _profilLoaded = true;
     try {
-      final siswa = await Api.profilSiswa();
-      await Session.applyProfil(
-        status: (siswa['status'] ?? '').toString(),
-        kelas: (siswa['kelas'] ?? '').toString(),
-        tempatLahir: (siswa['tempat_lahir'] ?? '').toString(),
-        tanggalLahir: (siswa['tanggal_lahir'] ?? '').toString(),
-        alamat: (siswa['alamat'] ?? '').toString(),
-      );
+      final data = await Api.profil();
+      final siswa = data['siswa'];
+      if (siswa is Map) {
+        await Session.applyProfil(
+          status: (siswa['status'] ?? '').toString(),
+          kelas: (siswa['kelas'] ?? '').toString(),
+          tempatLahir: (siswa['tempat_lahir'] ?? '').toString(),
+          tanggalLahir: (siswa['tanggal_lahir'] ?? '').toString(),
+          alamat: (siswa['alamat'] ?? '').toString(),
+        );
+      }
       if (mounted) setState(() {});
     } catch (_) {
       // Profil siswa bersifat opsional; hero tetap tampil dari data login.

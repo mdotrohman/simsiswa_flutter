@@ -125,6 +125,9 @@ armeabi-v7a; x86_64 dipisah untuk emulator) — sertifikat resmi SHA-256
 - `lib/tabs/beranda_tab.dart` — beranda premium: hero profil siswa, menu layanan
   (kotak navigasi 5 kolom + badge "Menu lainnya" 17 menu expand/collapse),
   aktivitas, pengumuman, dan keluar.
+- `lib/tabs/profil_tab.dart` — profil lengkap siswa: hero gradien (foto/inisial,
+  status) + kartu Data Pribadi, Alamat, Pendidikan, Orang Tua/Wali, dan Akun;
+  data dari `POST app/api/apk/siswa/profil`, pull-to-refresh, skeleton loading.
 - `lib/core/api.dart`, `lib/core/session.dart` — klien API & sesi.
 - `lib/models/login.dart`, `lib/models/profil.dart` — model kontrak API (login & profil publik).
 - `lib/core/credential_store.dart` — sandi tersimpan terenkripsi (Keystore/Keychain).

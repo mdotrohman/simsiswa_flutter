@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/api.dart';
 import '../core/session.dart';
 import '../auth/login_page.dart';
 
@@ -11,123 +12,728 @@ class ProfilTab extends StatefulWidget {
 }
 
 class _ProfilTabState extends State<ProfilTab> {
-  bool _loggingOut = false;
+  Map<String, dynamic>? _siswa;
+  Map<String, dynamic>? _orangtua;
+  bool _loaded = false;
 
-  void _logout() async {
-    if (_loggingOut) return;
-    setState(() => _loggingOut = true);
-    await Session.logout();
-    if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-      (route) => false,
-    );
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _loaded = false);
+    try {
+      final data = await Api.profil();
+      if (!mounted) return;
+      setState(() {
+        _siswa = data['siswa'] is Map
+            ? Map<String, dynamic>.from(data['siswa'] as Map)
+            : null;
+        final ot = data['orangtua'];
+        _orangtua = ot is Map ? Map<String, dynamic>.from(ot) : null;
+        _loaded = true;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loaded = true);
+    }
+  }
+
+  String _s(String key, [String fb = '']) {
+    final v = _siswa?[key];
+    if (v == null) return fb;
+    final t = v.toString().trim();
+    return t.isEmpty ? fb : t;
+  }
+
+  String get _name =>
+      _s('nama_lengkap', Session.name.isEmpty ? 'Siswa' : Session.name);
+  String get _roleLabel => Session.role == 'wali' ? 'Wali Siswa' : 'Siswa';
+  String get _status =>
+      _s('status', Session.status.isEmpty ? 'Aktif' : Session.status);
+  String get _kelas => _s('kelas', Session.kelas);
+  String get _ttl {
+    final t = _s('tempat_lahir', Session.tempatLahir).trim();
+    final d = _s('tanggal_lahir', Session.tanggalLahir).trim();
+    if (t.isEmpty && d.isEmpty) return '';
+    if (t.isEmpty) return d;
+    if (d.isEmpty) return t;
+    return '$t, $d';
+  }
+
+  String get _fullAlamat {
+    final a = _s('alamat').trim();
+    if (a.isNotEmpty) return a;
+    final parts = <String>[
+      Session.alamat.trim(),
+      _s('rt_rw'),
+      _s('desa_kelurahan'),
+      _s('kecamatan'),
+      _s('kabupaten'),
+      _s('provinsi'),
+      _s('kode_pos'),
+    ].where((e) => e.isNotEmpty).toList();
+    return parts.join(', ');
   }
 
   @override
   Widget build(BuildContext context) {
-    final name = Session.name;
-    final nis = Session.nis;
-    final nisn = Session.nisn;
-    final username = Session.username;
-    final wali = Session.waliNama;
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 36,
-                  backgroundColor:
-                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
-                  child: Icon(Icons.person, size: 40,
-                      color: Theme.of(context).colorScheme.primary),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  name.isEmpty ? 'Akun' : name,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  Session.role == 'wali' ? 'Wali Siswa' : 'Siswa',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                if (nis.isNotEmpty)
-                  Text(
-                    'NIS $nis',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 13,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Card(
-          child: Column(
-            children: [
-              if (username.isNotEmpty) _infoTile(Icons.alternate_email, 'Username', username),
-              if (nis.isNotEmpty) _infoTile(Icons.badge_outlined, 'NIS', nis),
-              if (nisn.isNotEmpty) _infoTile(Icons.credit_card, 'NISN', nisn),
-              if (Session.role == 'siswa' && wali.isNotEmpty)
-                _infoTile(Icons.family_restroom_outlined, 'Wali', wali),
+    if (!_loaded) return _buildSkeleton();
+    final s = Theme.of(context).colorScheme;
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildHeader(context),
+          const SizedBox(height: 16),
+          _buildSection(
+            context,
+            accent: s.tertiary,
+            icon: Icons.person_outline,
+            title: 'Data Pribadi',
+            rows: [
+              (Icons.cake_outlined, 'Tempat & Tanggal Lahir', _ttl),
+              (Icons.wc_outlined, 'Jenis Kelamin', _s('jenis_kelamin')),
+              (Icons.church_outlined, 'Agama', _s('agama')),
+              (Icons.self_improvement_outlined, 'Status Santri',
+                  _s('status_santri')),
+              (Icons.water_drop_outlined, 'Golongan Darah', _s('golongan_darah')),
+              (Icons.exposure_outlined, 'Anak Ke', _s('anak_ke')),
+              (Icons.groups_outlined, 'Jumlah Saudara', _s('jumlah_saudara')),
+              (Icons.sports_esports_outlined, 'Hobi', _s('hobi')),
+              (Icons.flag_outlined, 'Cita-cita', _s('cita_cita')),
+              (Icons.phone_outlined, 'No. HP', _s('no_hp')),
+              (Icons.email_outlined, 'Email', _s('email')),
+              (Icons.credit_card_outlined, 'NIK', _s('nik')),
+              (Icons.folder_shared_outlined, 'No. KK', _s('no_kk')),
+              (Icons.description_outlined, 'Akta Lahir', _s('akta_lahir')),
+              (Icons.commute_outlined, 'Transportasi', _s('transportasi')),
+              (Icons.route_outlined, 'Jarak ke Sekolah', _s('jarak')),
             ],
           ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 48,
-          child: OutlinedButton.icon(
-            onPressed: _loggingOut ? null : _logout,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFFB91C1C),
-              side: const BorderSide(color: Color(0xFFB91C1C)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            icon: _loggingOut
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.logout),
-            label: Text(_loggingOut ? '' : 'KELUAR'),
+          const SizedBox(height: 16),
+          _buildSection(
+            context,
+            accent: const Color(0xFF00897B),
+            icon: Icons.home_outlined,
+            title: 'Alamat',
+            rows: [
+              (Icons.location_on_outlined, 'Alamat Rumah', _fullAlamat),
+              (Icons.signpost_outlined, 'RT / RW', _s('rt_rw')),
+              (Icons.location_city_outlined, 'Desa / Kelurahan',
+                  _s('desa_kelurahan')),
+              (Icons.map_outlined, 'Kecamatan', _s('kecamatan')),
+              (Icons.map_rounded, 'Kabupaten / Kota', _s('kabupaten')),
+              (Icons.public_outlined, 'Provinsi', _s('provinsi')),
+              (Icons.mail_outlined, 'Kode Pos', _s('kode_pos')),
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: 16),
+          _buildSection(
+            context,
+            accent: const Color(0xFFF57C00),
+            icon: Icons.school_outlined,
+            title: 'Pendidikan',
+            rows: [
+              (Icons.segment_outlined, 'Kelas', _kelas),
+              (Icons.format_list_numbered_outlined, 'Tingkat', _s('tingkat')),
+              (Icons.calendar_month_outlined, 'Tahun Ajaran',
+                  _s('tahun_ajaran')),
+              (Icons.event_note_outlined, 'Semester', _s('semester')),
+              (Icons.date_range_outlined, 'Tanggal Masuk',
+                  _s('tanggal_masuk')),
+              (Icons.verified_user_outlined, 'Status', _status),
+            ],
+          ),
+          if (_buildOrangTuaHeader(context) != null) ...[
+            const SizedBox(height: 16),
+            _buildOrangTua(context),
+          ],
+          const SizedBox(height: 16),
+          _buildAccount(context),
+          const SizedBox(height: 16),
+          _buildLogout(context),
+          const SizedBox(height: 8),
+        ],
+      ),
     );
   }
 
-  Widget _infoTile(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
+  // ----------------------------------------------------------------- header
+  Widget _buildHeader(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    final foto = _s('foto_url').trim();
+    final useFoto = foto.startsWith('http');
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color.lerp(s.primary, Colors.black, 0.35)!, s.primary],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: s.primary.withValues(alpha: 0.25),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
         children: [
-          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 20),
+          Container(
+            width: 90,
+            height: 90,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withValues(alpha: 0.95),
+                  Colors.white.withValues(alpha: 0.2),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: useFoto
+                  ? Image.network(foto,
+                      width: 84,
+                      height: 84,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _initialAvatar(s, 84))
+                  : _initialAvatar(s, 84),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            _name,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _badge(Icons.badge_outlined, _roleLabel,
+                  Colors.white.withValues(alpha: 0.18)),
+              const SizedBox(width: 6),
+              _badge(Icons.verified_user, _status, const Color(0xFF1F7A3D)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _mini(s, 'NIS', _s('nis', Session.nis).isEmpty
+                  ? '-'
+                  : _s('nis', Session.nis)),
+              const SizedBox(width: 8),
+              _mini(s, 'NISN', _s('nisn', Session.nisn).isEmpty
+                  ? '-'
+                  : _s('nisn', Session.nisn)),
+              const SizedBox(width: 8),
+              _mini(s, 'Kelas', _kelas.isEmpty ? '-' : _kelas),
+            ],
+          ),
+          if (_ttl.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                _mini(s, 'Tempat & Tanggal Lahir', _ttl),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _initialAvatar(ColorScheme s, double size) {
+    final initial = _name.isEmpty
+        ? 'S'
+        : _name.trim().characters.first.toUpperCase();
+    return Container(
+      width: size,
+      height: size,
+      color: Color.lerp(s.tertiary, Colors.black, 0.1),
+      child: Center(
+        child: Text(
+          initial,
+          style: TextStyle(
+            color: s.onTertiary,
+            fontSize: size * 0.42,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _badge(IconData icon, String label, Color bg) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(9),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: Colors.white),
+          const SizedBox(width: 4),
+          Text(label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+
+  Widget _mini(ColorScheme s, String label, String value) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label,
+                style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.72), fontSize: 10.5)),
+            const SizedBox(height: 2),
+            Text(value,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ----------------------------------------------------------------- section
+  Widget _buildSection(
+    BuildContext context, {
+    required Color accent,
+    required IconData icon,
+    required String title,
+    required List<(IconData, String, String)> rows,
+  }) {
+    final s = Theme.of(context).colorScheme;
+    final tiles = <Widget>[];
+    for (final (ic, label, value) in rows) {
+      if (value.trim().isEmpty) continue;
+      if (tiles.isNotEmpty) tiles.add(_divider(s));
+      tiles.add(_infoTile(ic, label, value, accent));
+    }
+    if (tiles.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: s.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: s.outlineVariant.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(icon, size: 19, color: accent),
+              ),
+              const SizedBox(width: 10),
+              Text(title,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+              const Spacer(),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text('${tiles.length ~/ 2 + tiles.length % 2} item',
+                    style: TextStyle(fontSize: 11, color: accent)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...tiles,
+        ],
+      ),
+    );
+  }
+
+  Widget _infoTile(IconData icon, String label, String value, Color accent) {
+    final s = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 19, color: accent),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12)),
-                Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                Text(label,
+                    style: TextStyle(
+                        color: s.onSurfaceVariant, fontSize: 12)),
+                const SizedBox(height: 2),
+                Text(value,
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w600)),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _divider(ColorScheme s) => Divider(
+        height: 1,
+        thickness: 0.7,
+        color: s.outlineVariant.withValues(alpha: 0.35),
+      );
+
+  // -------------------------------------------------------------- orang tua
+  bool get _hasOrangTua {
+    final ot = _orangtua;
+    if (ot == null) return false;
+    return ['ayah', 'ibu', 'wali'].any((k) => ot[k] is Map);
+  }
+
+  Widget? _buildOrangTuaHeader(BuildContext context) {
+    return _hasOrangTua ? const SizedBox.shrink() : null;
+  }
+
+  Widget _buildOrangTua(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    final ot = _orangtua!;
+    const accent = Color(0xFF3949AB);
+    final cards = <Widget>[];
+    final labels = {'ayah': 'Ayah', 'ibu': 'Ibu', 'wali': 'Wali'};
+    for (final entry in labels.entries) {
+      final p = ot[entry.key];
+      if (p is! Map) continue;
+      final pm = Map<String, dynamic>.from(p);
+      final n = parenString(pm, 'nama', entry.value);
+      final tiles = <(IconData, String, String)>[
+        for (final (ic, key) in [
+          (Icons.work_outline, 'Pekerjaan'),
+          (Icons.school_outlined, 'Pendidikan'),
+          (Icons.phone_outlined, 'No. HP'),
+          (Icons.payments_outlined, 'Penghasilan'),
+          (Icons.home_outlined, 'Alamat'),
+        ])
+          if (parenString(pm, _byKeys(key), '').isNotEmpty)
+            (ic, key, parenString(pm, _byKeys(key), '')),
+      ];
+      if (tiles.isEmpty) continue;
+      cards.add(
+        Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: s.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: accent.withValues(alpha: 0.25)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          accent,
+                          Color.lerp(accent, Colors.black, 0.2)!,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: Center(
+                      child: Text(
+                        n.isEmpty ? '?' : n.trim().characters.first.toUpperCase(),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(entry.value,
+                            style: TextStyle(
+                                fontSize: 11,
+                                color: s.onSurfaceVariant)),
+                        Text(n,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w800)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              for (final (ic, label, value) in tiles)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(ic, size: 18, color: accent),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(label,
+                                style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: s.onSurfaceVariant)),
+                            Text(value.trim(),
+                                style: const TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (cards.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: s.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: s.outlineVariant.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child:
+                    Icon(Icons.family_restroom_outlined, size: 19, color: accent),
+              ),
+              const SizedBox(width: 10),
+              Text('Orang Tua / Wali',
+                  style: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w800)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...cards,
+        ],
+      ),
+    );
+  }
+
+  String parenString(Map<String, dynamic> m, String key, String fb) {
+    final v = m[key];
+    if (v == null) return fb;
+    final t = v.toString().trim();
+    return t.isEmpty ? fb : t;
+  }
+
+  String _byKeys(String label) => switch (label) {
+        'Pekerjaan' => 'pekerjaan',
+        'Pendidikan' => 'pendidikan',
+        'No. HP' => 'no_hp',
+        'Penghasilan' => 'penghasilan',
+        'Alamat' => 'alamat',
+        _ => 'nama',
+      };
+
+  // ------------------------------------------------------------------ akun
+  Widget _buildAccount(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    final rows = <(IconData, String, String)>[
+      (Icons.alternate_email, 'Username', Session.username),
+      (Icons.badge_outlined, 'Peran', _roleLabel),
+      (Icons.family_restroom_outlined, 'Wali', Session.waliNama.trim()),
+    ];
+    final tiles = <Widget>[];
+    for (final (ic, label, value) in rows) {
+      if (value.trim().isEmpty) continue;
+      if (tiles.isNotEmpty) tiles.add(_divider(s));
+      tiles.add(_infoTile(ic, label, value, s.primary));
+    }
+    if (tiles.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: s.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: s.outlineVariant.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: s.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child:
+                    Icon(Icons.manage_accounts_outlined, size: 19, color: s.primary),
+              ),
+              const SizedBox(width: 10),
+              Text('Akun',
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...tiles,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLogout(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    return SafeArea(
+      top: false,
+      child: OutlinedButton.icon(
+        onPressed: () => showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            icon: Icon(Icons.logout, color: s.error),
+            title: const Text('Keluar?'),
+            content: const Text('Anda yakin ingin keluar dari akun ini?'),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Batal')),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: s.error),
+                onPressed: () async {
+                  final nav = Navigator.of(context);
+                  Navigator.of(ctx).pop();
+                  await Session.logout();
+                  if (!mounted) return;
+                  nav.pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const LoginPage()),
+                    (route) => false,
+                  );
+                },
+                child: const Text('Keluar'),
+              ),
+            ],
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: s.error,
+          side: BorderSide(color: s.error.withValues(alpha: 0.5)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+        ),
+        icon: const Icon(Icons.logout, size: 18),
+        label: const Text('Keluar dari Aplikasi'),
+      ),
+    );
+  }
+
+  Widget _buildSkeleton() {
+    final s = Theme.of(context).colorScheme;
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(16),
+      children: [
+        Container(
+          height: 260,
+          decoration: BoxDecoration(
+            color: s.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(24),
+          ),
+        ),
+        for (var i = 0; i < 3; i++) ...[
+          const SizedBox(height: 16),
+          Container(
+            height: 200,
+            decoration: BoxDecoration(
+              color: s.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
