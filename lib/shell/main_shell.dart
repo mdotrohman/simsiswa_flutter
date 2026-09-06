@@ -174,9 +174,11 @@ class _OldNavItem extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        // Blok ikon (piring aktif + ikon) melayang 50% ke atas saat aktif.
+        // Blok ikon (piring aktif + ikon) melayang ~35% ke atas saat aktif
+        // (tidak terlalu tinggi agar busur setengah-lingkaran masih menyilang
+        // area bar hijau dan terlihat jelas).
         AnimatedSlide(
-          offset: active ? const Offset(0, -0.5) : Offset.zero,
+          offset: active ? const Offset(0, -0.35) : Offset.zero,
           duration: const Duration(milliseconds: 260),
           curve: Curves.easeOutCubic,
           child: SizedBox(
@@ -186,17 +188,25 @@ class _OldNavItem extends StatelessWidget {
               alignment: Alignment.center,
               clipBehavior: Clip.none,
               children: [
-                // Ring "cradle" aktif: busur bawah tebal sewarna background
-                // halaman (menempel ke bar, tanpa kesan mengambang), atas
-                // sepenuhnya transparan.
-                if (active)
-                  CustomPaint(
-                    painter: _CradleRingPainter(
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      thickness: 16,
+                // "Bowl" aktif: setengah-lingkaran besar yang PERSISTEN saat
+                // aktif (tidak mengecil setelah disentuh). Glow emerald lembut
+                // di belakang + pita tebal sewarna background halaman (look
+                // "cutout") + rim emerald tipis agar terlihat premium.
+                AnimatedScale(
+                  scale: active ? 1.0 : 0.001,
+                  duration: const Duration(milliseconds: 340),
+                  curve: Curves.easeOutBack,
+                  child: CustomPaint(
+                    painter: _ActiveBowlPainter(
+                      bandColor: Theme.of(context).scaffoldBackgroundColor,
+                      glowColor: _kActiveDisc.withValues(alpha: 0.34),
+                      rimColor: const Color(0xFF34D399),
+                      bandThickness: 16,
+                      rimThickness: 3,
                     ),
-                    child: const SizedBox(width: 82, height: 82),
+                    child: const SizedBox(width: 118, height: 118),
                   ),
+                ),
                 // Piring aktif: satu aksen emerald bersih + rim tipis.
                 AnimatedScale(
                   scale: active ? 1.30 : 0.001,
@@ -261,32 +271,71 @@ class _OldNavItem extends StatelessWidget {
   }
 }
 
-/// Ring "cradle" aktif: busur setengah bawah (semi-circle) tebal, atas
-/// transparan penuh — menyatu dengan background halaman.
-class _CradleRingPainter extends CustomPainter {
-  _CradleRingPainter({required this.color, required this.thickness});
+/// Bowl aktif: setengah-lingkaran (semi-circle) besar yang selalu tampil
+/// penuh selama item aktif. Terdiri dari 3 lapisan:
+///   1. glow emerald lembut (fill + blur) — premium,
+///   2. pita tebal sewarna background halaman — efek "cutout" menyatu
+///      dengan halaman (look app lama, tapi diperbesar),
+///   3. rim emerald tipis di sisi dalam pita — bingkai yang tajam.
+/// Atas sepenuhnya transparan.
+class _ActiveBowlPainter extends CustomPainter {
+  const _ActiveBowlPainter({
+    required this.bandColor,
+    required this.glowColor,
+    required this.rimColor,
+    required this.bandThickness,
+    required this.rimThickness,
+  });
 
-  final Color color;
-  final double thickness;
+  final Color bandColor;
+  final Color glowColor;
+  final Color rimColor;
+  final double bandThickness;
+  final double rimThickness;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = thickness
-      ..color = color
-      ..strokeCap = StrokeCap.round;
+    // Pusat busur diberi margin sebesar tebal pita agar stroke tidak terpotong.
     final rect = Rect.fromLTWH(
-      thickness / 2,
-      thickness / 2,
-      size.width - thickness,
-      size.height - thickness,
+      bandThickness,
+      bandThickness,
+      size.width - bandThickness * 2,
+      size.height - bandThickness * 2,
     );
-    // Busur bawah: dari kanan lewat dasar ke kiri (atas terbuka/transparan).
-    canvas.drawArc(rect, 0, math.pi, false, paint);
+
+    // 1. Glow lembut (fill blur) — membesar sedikit di luar pita.
+    final glow = Paint()
+      ..style = PaintingStyle.fill
+      ..color = glowColor
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
+    final glowPath = Path()
+      ..addArc(rect.inflate(16), 0, math.pi)
+      ..close();
+    canvas.drawPath(glowPath, glow);
+
+    // 2. Pita tebal sewarna background halaman (setengah-lingkaran utama).
+    final band = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = bandThickness
+      ..strokeCap = StrokeCap.round
+      ..color = bandColor;
+    canvas.drawArc(rect, 0, math.pi, false, band);
+
+    // 3. Rim emerald tipis di sisi dalam, tepat menempel tepi piring ikon.
+    final rimRect = rect.deflate(bandThickness / 2 - 1);
+    final rim = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = rimThickness
+      ..strokeCap = StrokeCap.round
+      ..color = rimColor;
+    canvas.drawArc(rimRect, 0, math.pi, false, rim);
   }
 
   @override
-  bool shouldRepaint(_CradleRingPainter oldDelegate) =>
-      oldDelegate.color != color || oldDelegate.thickness != thickness;
+  bool shouldRepaint(_ActiveBowlPainter oldDelegate) =>
+      oldDelegate.bandColor != bandColor ||
+      oldDelegate.glowColor != glowColor ||
+      oldDelegate.rimColor != rimColor ||
+      oldDelegate.bandThickness != bandThickness ||
+      oldDelegate.rimThickness != rimThickness;
 }
