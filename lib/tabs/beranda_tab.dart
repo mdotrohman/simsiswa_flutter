@@ -47,7 +47,7 @@ class _BerandaTabState extends State<BerandaTab> {
     return Stack(
       children: [
         ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 108),
+          padding: const EdgeInsets.all(16),
           children: [
             _greetingCard(),
             const SizedBox(height: 20),
@@ -67,7 +67,6 @@ class _BerandaTabState extends State<BerandaTab> {
             const SizedBox(height: 8),
           ],
         ),
-        Positioned(right: 16, bottom: 16, child: _allMenusFab()),
       ],
     );
   }
@@ -260,10 +259,63 @@ class _BerandaTabState extends State<BerandaTab> {
         crossAxisSpacing: 4,
         childAspectRatio: 0.85,
       ),
-      itemCount: items.length,
+      itemCount: items.length + 1,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemBuilder: (context, i) => _menuTile(items[i]),
+      itemBuilder: (context, i) =>
+          i < items.length ? _menuTile(items[i]) : _allMenusGridTile(),
+    );
+  }
+
+  Widget _allMenusGridTile() {
+    final s = Theme.of(context).colorScheme;
+    return InkResponse(
+      radius: 42,
+      onTap: _showAllMenus,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color.lerp(s.primary, Colors.black, 0.3)!,
+                  s.primary,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: s.primary.withValues(alpha: 0.35),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(Icons.apps_rounded, color: Colors.white, size: 30),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Menu lainnya',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: s.onSurface,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -579,61 +631,6 @@ class _BerandaTabState extends State<BerandaTab> {
           _MenuItem(Icons.help_outline, 'Bantuan', Colors.brown, _sample),
         ]),
       ];
-
-  Widget _allMenusFab() {
-    final s = Theme.of(context).colorScheme;
-    return Material(
-      color: Colors.transparent,
-      elevation: 0,
-      child: Ink(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [s.primary, Color.lerp(s.primary, Colors.black, 0.25)!],
-          ),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: s.primary.withValues(alpha: 0.35),
-              blurRadius: 14,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: _showAllMenus,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.apps_rounded, color: Colors.white, size: 22),
-                const SizedBox(width: 9),
-                const Text(
-                  'Menu lainnya',
-                  style: TextStyle(
-                      color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.22),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text('17',
-                      style: TextStyle(
-                          color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   void _showAllMenus() {
     final s = Theme.of(context).colorScheme;
