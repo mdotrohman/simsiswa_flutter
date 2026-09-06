@@ -462,31 +462,87 @@ class _IndexPageState extends State<IndexPage> {
       s,
       title: 'Media Sosial',
       icon: Icons.public_rounded,
-      child: Column(
+      child: GridView.count(
+        crossAxisCount: 3,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        childAspectRatio: 1.6,
         children: [
-          for (var i = 0; i < sosmed.length; i++) ...[
-            if (i > 0)
-              Divider(height: 1, thickness: 0.7, color: s.outlineVariant.withValues(alpha: 0.35)),
-            _actionTile(
+          for (final e in sosmed)
+            _socialChip(
               s,
-              gradient: sosmed[i].$4,
-              icon: sosmed[i].$2,
-              glyph: sosmed[i].$3,
-              title: sosmed[i].$1,
-              subtitle: _shortUrl(sosmed[i].$5),
-              onTap: () => _launchWeb(sosmed[i].$5),
+              name: e.$1,
+              icon: e.$2,
+              glyph: e.$3,
+              colors: e.$4,
+              onTap: () => _launchWeb(e.$5),
             ),
-          ],
         ],
       ),
     );
   }
 
-  String _shortUrl(String url) {
-    return url
-        .replaceAll(RegExp(r'^https?://'), '')
-        .replaceAll(RegExp(r'^www\.'), '')
-        .replaceAll(RegExp(r'/$'), '');
+  Widget _socialChip(
+    ColorScheme s, {
+    required String name,
+    IconData? icon,
+    String? glyph,
+    required List<Color> colors,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(15),
+      child: Ink(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: colors,
+          ),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+          boxShadow: [
+            BoxShadow(
+              color: colors.first.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(15),
+          onTap: onTap,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (glyph != null)
+                Text(glyph,
+                    style: const TextStyle(
+                        color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800))
+              else
+                Icon(icon, color: Colors.white, size: 19),
+              const SizedBox(height: 5),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.95),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   // ------------------------------------------------------------- tile umum
@@ -612,7 +668,7 @@ class _IndexPageState extends State<IndexPage> {
 
   Widget _sectionCard(ColorScheme s, {required String title, required IconData icon, required Widget child}) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.only(top: 8),
       child: _sectionShell(
         s,
         Padding(
