@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../core/api.dart';
 import '../core/session.dart';
 
 class BerandaTab extends StatefulWidget {
@@ -12,35 +11,6 @@ class BerandaTab extends StatefulWidget {
 }
 
 class _BerandaTabState extends State<BerandaTab> {
-  Map<String, dynamic>? _dashboard;
-  bool _dashLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadDashboard();
-  }
-
-  Future<void> _loadDashboard() async {
-    setState(() => _dashLoading = true);
-    try {
-      final json = await Api.dashboard();
-      if (!mounted) return;
-      setState(() {
-        _dashboard = json;
-        _dashLoading = false;
-      });
-    } catch (_) {
-      // Dashboard bersifat opsional: bila gagal (mis. 404 / offline), home tetap
-      // ditampilkan lengkap dengan statistik ringan internal alih-alih error card.
-      if (!mounted) return;
-      setState(() {
-        _dashboard = null;
-        _dashLoading = false;
-      });
-    }
-  }
-
   String get _roleLabel => Session.role == 'wali' ? 'Wali Siswa' : 'Siswa';
   String get _initial =>
       Session.name.isEmpty ? 'S' : Session.name.characters.first.toUpperCase();
@@ -51,8 +21,6 @@ class _BerandaTabState extends State<BerandaTab> {
       padding: const EdgeInsets.all(16),
       children: [
         _greetingCard(),
-        const SizedBox(height: 16),
-        _statsSection(),
         const SizedBox(height: 20),
         _sectionHeader('Menu Layanan', 'Akses cepat fitur', Icons.grid_view_rounded),
         const SizedBox(height: 12),
@@ -176,10 +144,67 @@ class _BerandaTabState extends State<BerandaTab> {
             runSpacing: 8,
             children: [
               _chip(Icons.badge_outlined, _roleLabel),
-              if (Session.nis.isNotEmpty) _chip(Icons.school_outlined, 'NIS ${Session.nis}'),
               if (Session.role == 'siswa' && Session.waliNama.isNotEmpty)
                 _chip(Icons.family_restroom_outlined, 'Wali: ${Session.waliNama}'),
             ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 14),
+            child: Divider(height: 1, color: Colors.white24),
+          ),
+          if (Session.nis.isNotEmpty)
+            _bioRow(Icons.school_outlined, 'NIS', Session.nis),
+          if (Session.kelas.isNotEmpty)
+            _bioRow(Icons.segment_outlined, 'Kelas', Session.kelas),
+          if (Session.status.isNotEmpty)
+            _bioRow(Icons.verified_user_outlined, 'Status', Session.status),
+          if (_ttl.isNotEmpty)
+            _bioRow(Icons.cake_outlined, 'Tempat & Tanggal Lahir', _ttl),
+          if (Session.alamat.isNotEmpty)
+            _bioRow(Icons.home_outlined, 'Alamat Rumah', Session.alamat),
+        ],
+      ),
+    );
+  }
+
+  String get _ttl {
+    final t = Session.tempatLahir.trim();
+    final d = Session.tanggalLahir.trim();
+    if (t.isEmpty && d.isEmpty) return '';
+    if (t.isEmpty) return d;
+    if (d.isEmpty) return t;
+    return '$t, $d';
+  }
+
+  Widget _bioRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.16),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Colors.white, size: 14),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.72), fontSize: 11.5)),
+                const SizedBox(height: 1.5),
+                Text(value,
+                    style: const TextStyle(
+                        color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700)),
+              ],
+            ),
           ),
         ],
       ),
@@ -204,103 +229,8 @@ class _BerandaTabState extends State<BerandaTab> {
     );
   }
 
-  // ------------------------------------------------------------------- stats
-  Widget _statsSection() {
-    if (_dashLoading) {
-      return Row(
-        children: [
-          for (var i = 0; i < 3; i++) ...[
-            if (i > 0) const SizedBox(width: 12),
-            Expanded(child: _statSkeleton()),
-          ],
-        ],
-      );
-    }
-    final d = _dashboard;
-    return Row(
-      children: [
-        _statCard(
-          icon: Icons.school,
-          color: Theme.of(context).colorScheme.primary,
-          label: 'Siswa',
-          value: (d?['total_siswa'] ?? 0).toString(),
-        ),
-        const SizedBox(width: 12),
-        _statCard(
-          icon: Icons.people_alt,
-          color: Theme.of(context).colorScheme.secondary,
-          label: 'Guru',
-          value: (d?['total_guru'] ?? 0).toString(),
-        ),
-        const SizedBox(width: 12),
-        _statCard(
-          icon: Icons.meeting_room,
-          color: Theme.of(context).colorScheme.tertiary,
-          label: 'Kelas',
-          value: (d?['total_kelas'] ?? 0).toString(),
-        ),
-      ],
-    );
-  }
-
-  Widget _statSkeleton() {
-    final s = Theme.of(context).colorScheme;
-    return Container(
-      height: 96,
-      decoration: BoxDecoration(
-        color: s.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
-      ),
-    );
-  }
-
-  Widget _statCard({
-    required IconData icon,
-    required Color color,
-    required String label,
-    required String value,
-  }) {
-    final s = Theme.of(context).colorScheme;
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-        decoration: BoxDecoration(
-          color: s.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: s.outlineVariant.withValues(alpha: 0.4)),
-        ),
-        child: Column(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 22),
-            ),
-            const SizedBox(height: 10),
-            Text(value,
-                style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
-            Text(label,
-                style: TextStyle(color: s.onSurfaceVariant, fontSize: 12)),
-          ],
-        ),
-      ),
-    );
-  }
-
   // ------------------------------------------------------------------- menu
   Widget _menuGrid() {
-    final s = Theme.of(context).colorScheme;
-    final accent = [
-      s.primary,
-      s.secondary,
-      s.tertiary,
-      Color.lerp(s.primary, Colors.black, 0.2)!,
-      const Color(0xFF00796B),
-    ];
     final items = [
       _MenuItem(Icons.payments_outlined, 'Pembayaran', Colors.green, () => widget.onNavigate(2)),
       _MenuItem(Icons.event_available_outlined, 'Absensi', Colors.indigo, () => widget.onNavigate(3)),
@@ -317,14 +247,14 @@ class _BerandaTabState extends State<BerandaTab> {
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 5,
-        mainAxisSpacing: 14,
+        mainAxisSpacing: 8,
         crossAxisSpacing: 8,
-        childAspectRatio: 0.68,
+        childAspectRatio: 0.66,
       ),
       itemCount: items.length,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemBuilder: (context, i) => _menuTile(items[i], accent[i % accent.length]),
+      itemBuilder: (context, i) => _menuTile(items[i]),
     );
   }
 
@@ -334,50 +264,64 @@ class _BerandaTabState extends State<BerandaTab> {
     );
   }
 
-  Widget _menuTile(_MenuItem m, Color color) {
+  Widget _menuTile(_MenuItem m) {
     final s = Theme.of(context).colorScheme;
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: m.onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [color.withValues(alpha: 0.16), color.withValues(alpha: 0.08)],
-              ),
-              shape: BoxShape.circle,
-              border: Border.all(color: color.withValues(alpha: 0.3)),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.15),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+    final color = m.color;
+    return Material(
+      color: Colors.transparent,
+      child: Ink(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [color.withValues(alpha: 0.16), color.withValues(alpha: 0.05)],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.22)),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: m.onTap,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [color, Color.lerp(color, Colors.black, 0.22)!],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.35),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Icon(m.icon, color: color, size: 24),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: Text(
-              m.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: s.onSurface,
+                child: Icon(m.icon, color: Colors.white, size: 21),
               ),
-            ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                child: Text(
+                  m.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    color: s.onSurface,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

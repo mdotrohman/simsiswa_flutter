@@ -40,6 +40,11 @@ class Session {
   static String get nis => _str('nis');
   static String get nisn => _str('nisn');
   static String get waliNama => _str('wali_nama');
+  static String get status => _str('status');
+  static String get kelas => _str('kelas');
+  static String get tempatLahir => _str('tempat_lahir');
+  static String get tanggalLahir => _str('tanggal_lahir');
+  static String get alamat => _str('alamat');
 
   static void save({
     required String role,
@@ -50,6 +55,11 @@ class Session {
     required String nis,
     required String nisn,
     required String waliNama,
+    String status = '',
+    String kelas = '',
+    String tempatLahir = '',
+    String tanggalLahir = '',
+    String alamat = '',
   }) {
     _prefs.setBool('logged_in', true);
     _prefs.setString('role', role);
@@ -60,6 +70,11 @@ class Session {
     _prefs.setString('nis', nis);
     _prefs.setString('nisn', nisn);
     _prefs.setString('wali_nama', waliNama);
+    _prefs.setString('status', status);
+    _prefs.setString('kelas', kelas);
+    _prefs.setString('tempat_lahir', tempatLahir);
+    _prefs.setString('tanggal_lahir', tanggalLahir);
+    _prefs.setString('alamat', alamat);
     _bump();
   }
 

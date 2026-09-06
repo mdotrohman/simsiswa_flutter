@@ -26,6 +26,13 @@ class LoginData {
   final String nisn;
   final String waliNama;
 
+  // Data bio siswa/wali (opsional — bila server mengirimnya).
+  final String status;
+  final String kelas;
+  final String tempatLahir;
+  final String tanggalLahir;
+  final String alamat;
+
   LoginData({
     required this.role,
     required this.userId,
@@ -35,18 +42,29 @@ class LoginData {
     required this.nis,
     required this.nisn,
     required this.waliNama,
+    this.status = '',
+    this.kelas = '',
+    this.tempatLahir = '',
+    this.tanggalLahir = '',
+    this.alamat = '',
   });
 
   factory LoginData.fromJson(Map<String, dynamic> json) {
+    String s(dynamic v) => v?.toString() ?? '';
     return LoginData(
-      role: json['role']?.toString() ?? '',
+      role: s(json['role']),
       userId: (json['user_id'] as num?)?.toInt() ?? 0,
-      token: json['token']?.toString() ?? '',
-      username: json['username']?.toString() ?? '',
-      name: json['name']?.toString() ?? '',
-      nis: json['nis']?.toString() ?? '',
-      nisn: json['nisn']?.toString() ?? '',
-      waliNama: json['wali_nama']?.toString() ?? '',
+      token: s(json['token']),
+      username: s(json['username']),
+      name: s(json['name']),
+      nis: s(json['nis']),
+      nisn: s(json['nisn']),
+      waliNama: s(json['wali_nama']),
+      status: s(json['status']),
+      kelas: s(json['kelas']),
+      tempatLahir: s(json['tempat_lahir']),
+      tanggalLahir: s(json['tanggal_lahir']),
+      alamat: s(json['alamat']),
     );
   }
 }

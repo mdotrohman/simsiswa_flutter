@@ -73,6 +73,11 @@ class _LoginPageState extends State<LoginPage> {
         nis: data.nis,
         nisn: data.nisn,
         waliNama: data.waliNama,
+        status: data.status,
+        kelas: data.kelas,
+        tempatLahir: data.tempatLahir,
+        tanggalLahir: data.tanggalLahir,
+        alamat: data.alamat,
       );
       if (!mounted) return;
       final saved = await CredentialStore.load();
@@ -197,7 +202,7 @@ class _LoginPageState extends State<LoginPage> {
                           _buildCard(),
                           const SizedBox(height: 16),
                           const Text(
-                            'v1.34 Premium',
+                            'v1.35 Premium',
                             style: TextStyle(color: Colors.white54, fontSize: 12),
                           ),
                         ],
