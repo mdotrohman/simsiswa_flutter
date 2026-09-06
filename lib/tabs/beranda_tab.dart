@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/api.dart';
 import '../core/session.dart';
 
 class BerandaTab extends StatefulWidget {
@@ -11,31 +12,62 @@ class BerandaTab extends StatefulWidget {
 }
 
 class _BerandaTabState extends State<BerandaTab> {
+  bool _profilLoaded = false;
+
   String get _roleLabel => Session.role == 'wali' ? 'Wali Siswa' : 'Siswa';
   String get _initial =>
       Session.name.isEmpty ? 'S' : Session.name.characters.first.toUpperCase();
 
   @override
+  void initState() {
+    super.initState();
+    _loadProfil();
+  }
+
+  Future<void> _loadProfil() async {
+    if (Session.role != 'siswa' || Session.userId <= 0 || _profilLoaded) return;
+    _profilLoaded = true;
+    try {
+      final siswa = await Api.profilSiswa();
+      await Session.applyProfil(
+        status: (siswa['status'] ?? '').toString(),
+        kelas: (siswa['kelas'] ?? '').toString(),
+        tempatLahir: (siswa['tempat_lahir'] ?? '').toString(),
+        tanggalLahir: (siswa['tanggal_lahir'] ?? '').toString(),
+        alamat: (siswa['alamat'] ?? '').toString(),
+      );
+      if (mounted) setState(() {});
+    } catch (_) {
+      // Profil siswa bersifat opsional; hero tetap tampil dari data login.
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return Stack(
       children: [
-        _greetingCard(),
-        const SizedBox(height: 20),
-        _sectionHeader('Menu Layanan', 'Akses cepat fitur', Icons.grid_view_rounded),
-        const SizedBox(height: 12),
-        _menuGrid(),
-        const SizedBox(height: 24),
-        _sectionHeader('Info & Aktivitas', 'Tetap update', Icons.bolt_rounded),
-        const SizedBox(height: 12),
-        _activityCard(),
-        const SizedBox(height: 16),
-        _announcementsCard(),
-        const SizedBox(height: 16),
-        _featuresCard(),
-        const SizedBox(height: 24),
-        _logoutCard(),
-        const SizedBox(height: 8),
+        ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 108),
+          children: [
+            _greetingCard(),
+            const SizedBox(height: 20),
+            _sectionHeader('Menu Layanan', 'Akses cepat fitur', Icons.grid_view_rounded),
+            const SizedBox(height: 12),
+            _menuGrid(),
+            const SizedBox(height: 24),
+            _sectionHeader('Info & Aktivitas', 'Tetap update', Icons.bolt_rounded),
+            const SizedBox(height: 12),
+            _activityCard(),
+            const SizedBox(height: 16),
+            _announcementsCard(),
+            const SizedBox(height: 16),
+            _featuresCard(),
+            const SizedBox(height: 24),
+            _logoutCard(),
+            const SizedBox(height: 8),
+          ],
+        ),
+        Positioned(right: 16, bottom: 16, child: _allMenusFab()),
       ],
     );
   }
@@ -99,8 +131,8 @@ class _BerandaTabState extends State<BerandaTab> {
           Row(
             children: [
               Container(
-                width: 46,
-                height: 46,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
@@ -109,7 +141,7 @@ class _BerandaTabState extends State<BerandaTab> {
                 child: Center(
                   child: Text(_initial,
                       style: const TextStyle(
-                          color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
+                          color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800)),
                 ),
               ),
               const SizedBox(width: 12),
@@ -118,9 +150,9 @@ class _BerandaTabState extends State<BerandaTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Selamat datang,',
+                      'Assalamu\'alaikum,',
                       style:
-                          TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12.5),
+                          TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12),
                     ),
                     Text(
                       Session.name.isEmpty ? 'Siswa' : Session.name,
@@ -128,40 +160,49 @@ class _BerandaTabState extends State<BerandaTab> {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 19,
+                        fontSize: 18,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.waving_hand, color: Colors.white, size: 26),
+              const Icon(Icons.waving_hand, color: Colors.white, size: 24),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 6,
+            runSpacing: 6,
             children: [
               _chip(Icons.badge_outlined, _roleLabel),
+              if (Session.nis.isNotEmpty) _chip(Icons.school_outlined, 'NIS ${Session.nis}'),
+              if (Session.kelas.isNotEmpty) _chip(Icons.segment_outlined, Session.kelas),
+              if (Session.status.isNotEmpty) _chip(Icons.verified_user_outlined, Session.status),
+              if (_ttl.isNotEmpty) _chip(Icons.cake_outlined, _ttl),
               if (Session.role == 'siswa' && Session.waliNama.isNotEmpty)
                 _chip(Icons.family_restroom_outlined, 'Wali: ${Session.waliNama}'),
             ],
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 14),
-            child: Divider(height: 1, color: Colors.white24),
-          ),
-          if (Session.nis.isNotEmpty)
-            _bioRow(Icons.school_outlined, 'NIS', Session.nis),
-          if (Session.kelas.isNotEmpty)
-            _bioRow(Icons.segment_outlined, 'Kelas', Session.kelas),
-          if (Session.status.isNotEmpty)
-            _bioRow(Icons.verified_user_outlined, 'Status', Session.status),
-          if (_ttl.isNotEmpty)
-            _bioRow(Icons.cake_outlined, 'Tempat & Tanggal Lahir', _ttl),
-          if (Session.alamat.isNotEmpty)
-            _bioRow(Icons.home_outlined, 'Alamat Rumah', Session.alamat),
+          if (Session.alamat.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(Icons.home_outlined,
+                    size: 15, color: Colors.white.withValues(alpha: 0.85)),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '$_roleLabel • ${Session.alamat}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9), fontSize: 11.5),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -176,54 +217,22 @@ class _BerandaTabState extends State<BerandaTab> {
     return '$t, $d';
   }
 
-  Widget _bioRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.5),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 26,
-            height: 26,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.16),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: Colors.white, size: 14),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label,
-                    style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.72), fontSize: 11.5)),
-                const SizedBox(height: 1.5),
-                Text(value,
-                    style: const TextStyle(
-                        color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _chip(IconData icon, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(9),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.white, size: 14),
-          const SizedBox(width: 6),
-          Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
+          Icon(icon, color: Colors.white, size: 13),
+          const SizedBox(width: 5),
+          Text(label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -247,9 +256,9 @@ class _BerandaTabState extends State<BerandaTab> {
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 5,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-        childAspectRatio: 0.66,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 4,
+        childAspectRatio: 0.85,
       ),
       itemCount: items.length,
       shrinkWrap: true,
@@ -266,62 +275,25 @@ class _BerandaTabState extends State<BerandaTab> {
 
   Widget _menuTile(_MenuItem m) {
     final s = Theme.of(context).colorScheme;
-    final color = m.color;
-    return Material(
-      color: Colors.transparent,
-      child: Ink(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [color.withValues(alpha: 0.16), color.withValues(alpha: 0.05)],
+    return InkResponse(
+      radius: 42,
+      onTap: m.onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(m.icon, color: m.color, size: 40),
+          const SizedBox(height: 8),
+          Text(
+            m.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: s.onSurface,
+            ),
           ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha: 0.22)),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: m.onTap,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [color, Color.lerp(color, Colors.black, 0.22)!],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.35),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Icon(m.icon, color: Colors.white, size: 21),
-              ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 3),
-                child: Text(
-                  m.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                    color: s.onSurface,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
@@ -578,6 +550,231 @@ class _BerandaTabState extends State<BerandaTab> {
       ),
     );
   }
+
+  // ------------------------------------------------------ semua menu (17)
+  List<_MenuGroup> get _menuGroups => [
+        _MenuGroup('Pembelajaran', Icons.school_outlined, Colors.purple, [
+          _MenuItem(Icons.edit_note_rounded, 'Tugas', Colors.purple, _sample),
+          _MenuItem(Icons.schedule_rounded, 'Jadwal', Colors.blueGrey, _sample),
+          _MenuItem(Icons.menu_book_outlined, 'E-Library', Colors.brown, _sample),
+          _MenuItem(Icons.fact_check_outlined, 'Hasil Ujian', Colors.deepOrange, _sample),
+          _MenuItem(Icons.assignment_turned_in_outlined, 'Raport', Colors.green, _sample),
+        ]),
+        _MenuGroup('Keuangan', Icons.account_balance_wallet_outlined, Colors.green, [
+          _MenuItem(Icons.payments_outlined, 'Pembayaran', Colors.green, () => widget.onNavigate(2)),
+          _MenuItem(Icons.receipt_long_outlined, 'Riwayat Pembayaran', Colors.teal, _sample),
+          _MenuItem(Icons.savings_outlined, 'Saldo & Keuangan', Colors.cyan, _sample),
+        ]),
+        _MenuGroup('Kehadiran', Icons.event_available_outlined, Colors.indigo, [
+          _MenuItem(Icons.event_available_outlined, 'Absensi', Colors.indigo, () => widget.onNavigate(3)),
+          _MenuItem(Icons.note_add_outlined, 'Izin / Sakit', Colors.redAccent, _sample),
+        ]),
+        _MenuGroup('Informasi & Lainnya', Icons.apps_outlined, Colors.orange, [
+          _MenuItem(Icons.campaign_outlined, 'Pengumuman', Colors.orange, () => widget.onNavigate(4)),
+          _MenuItem(Icons.person_outline, 'Profil', Colors.blue, () => widget.onNavigate(1)),
+          _MenuItem(Icons.event_note_outlined, 'Agenda Kegiatan', Colors.pink, _sample),
+          _MenuItem(Icons.newspaper_outlined, 'Berita Madrasah', Colors.blueGrey, _sample),
+          _MenuItem(Icons.emoji_events_outlined, 'Prestasi', Colors.amber, _sample),
+          _MenuItem(Icons.sports_soccer_outlined, 'Ekstrakurikuler', Colors.teal, _sample),
+          _MenuItem(Icons.help_outline, 'Bantuan', Colors.brown, _sample),
+        ]),
+      ];
+
+  Widget _allMenusFab() {
+    final s = Theme.of(context).colorScheme;
+    return Material(
+      color: Colors.transparent,
+      elevation: 0,
+      child: Ink(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [s.primary, Color.lerp(s.primary, Colors.black, 0.25)!],
+          ),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: s.primary.withValues(alpha: 0.35),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: _showAllMenus,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.apps_rounded, color: Colors.white, size: 22),
+                const SizedBox(width: 9),
+                const Text(
+                  'Menu lainnya',
+                  style: TextStyle(
+                      color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.22),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text('17',
+                      style: TextStyle(
+                          color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showAllMenus() {
+    final s = Theme.of(context).colorScheme;
+    final groups = _menuGroups;
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: s.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return FractionallySizedBox(
+          heightFactor: 0.9,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            s.primary,
+                            Color.lerp(s.primary, Colors.black, 0.25)!,
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(13),
+                      ),
+                      child: Center(
+                          child: Icon(Icons.apps_rounded, color: Colors.white, size: 22)),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Semua Menu',
+                              style: const TextStyle(
+                                  fontSize: 17, fontWeight: FontWeight.w800)),
+                          Text('${_menuCount(groups)} layanan . Ketuk grup untuk perluas',
+                              style: TextStyle(
+                                  fontSize: 12, color: s.onSurfaceVariant)),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      icon: Icon(Icons.close, color: s.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  children: [
+                    for (var g = 0; g < groups.length; g++) ...[
+                      _menuGroupTile(groups[g], initiallyExpanded: g == 0),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  int _menuCount(List<_MenuGroup> groups) =>
+      groups.fold(0, (sum, g) => sum + g.items.length);
+
+  Widget _menuGroupTile(_MenuGroup g, {required bool initiallyExpanded}) {
+    final s = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: s.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: s.outlineVariant.withValues(alpha: 0.4)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: initiallyExpanded,
+          shape: const RoundedRectangleBorder(),
+          collapsedShape: const RoundedRectangleBorder(),
+          iconColor: s.onSurfaceVariant,
+          collapsedIconColor: s.onSurfaceVariant,
+          leading: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: g.color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(g.icon, color: g.color, size: 20),
+          ),
+          title: Text(g.name,
+              style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800)),
+          subtitle: Text('${g.items.length} menu',
+              style: TextStyle(fontSize: 11.5, color: s.onSurfaceVariant)),
+          childrenPadding: const EdgeInsets.only(bottom: 6),
+          children: [
+            for (final m in g.items)
+              ListTile(
+                contentPadding: const EdgeInsets.only(left: 62, right: 16),
+                dense: true,
+                leading: Icon(m.icon, color: m.color, size: 24),
+                title: Text(m.label,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                trailing: Icon(Icons.chevron_right,
+                    size: 18, color: s.onSurfaceVariant),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  m.onTap();
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MenuGroup {
+  final String name;
+  final IconData icon;
+  final Color color;
+  final List<_MenuItem> items;
+  _MenuGroup(this.name, this.icon, this.color, this.items);
 }
 
 class _MenuItem {

@@ -78,6 +78,21 @@ class Session {
     _bump();
   }
 
+  static Future<void> applyProfil({
+    String status = '',
+    String kelas = '',
+    String tempatLahir = '',
+    String tanggalLahir = '',
+    String alamat = '',
+  }) async {
+    if (status.isNotEmpty) await _prefs.setString('status', status);
+    if (kelas.isNotEmpty) await _prefs.setString('kelas', kelas);
+    if (tempatLahir.isNotEmpty) await _prefs.setString('tempat_lahir', tempatLahir);
+    if (tanggalLahir.isNotEmpty) await _prefs.setString('tanggal_lahir', tanggalLahir);
+    if (alamat.isNotEmpty) await _prefs.setString('alamat', alamat);
+    _bump();
+  }
+
   static Future<void> logout() async {
     await _prefs.clear();
     _bump();

@@ -98,4 +98,19 @@ class Api {
   }
 
   static Future<Map<String, dynamic>> dashboard() => _send('GET', 'api/dashboard');
+
+  /// Profil lengkap siswa (GET/POST app/api/apk/siswa/profil).
+  /// Mengembalikan objek `data.siswa` untuk ditampilkan di beranda.
+  static Future<Map<String, dynamic>> profilSiswa() async {
+    final json = await _send('POST', 'app/api/apk/siswa/profil', body: {
+      'siswa_id': Session.userId,
+    });
+    if (json['success'] != true || json['data'] is! Map) {
+      throw ApiException(
+          200, json['message']?.toString() ?? 'Data profil tidak tersedia');
+    }
+    final data = json['data'] as Map<String, dynamic>;
+    final siswa = data['siswa'];
+    return (siswa is Map<String, dynamic>) ? siswa : <String, dynamic>{};
+  }
 }
