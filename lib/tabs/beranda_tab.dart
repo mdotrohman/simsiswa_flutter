@@ -54,7 +54,7 @@ class _BerandaTabState extends State<BerandaTab> {
             _sectionHeader('Menu Layanan', 'Akses cepat fitur', Icons.grid_view_rounded,
                 trailing: _allMenusBadge()),
             const SizedBox(height: 12),
-            _menuGrid(),
+            _menuBox(),
             const SizedBox(height: 24),
             _sectionHeader('Info & Aktivitas', 'Tetap update', Icons.bolt_rounded),
             const SizedBox(height: 12),
@@ -195,15 +195,36 @@ class _BerandaTabState extends State<BerandaTab> {
                       style:
                           TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12),
                     ),
-                    Text(
-                      Session.name.isEmpty ? 'Siswa' : Session.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            Session.name.isEmpty ? 'Siswa' : Session.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(_roleLabel,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700)),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -212,34 +233,64 @@ class _BerandaTabState extends State<BerandaTab> {
             ],
           ),
           const SizedBox(height: 14),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _chip(Icons.badge_outlined, _roleLabel),
-              if (Session.nis.isNotEmpty) _chip(Icons.school_outlined, 'NIS ${Session.nis}'),
-              if (Session.kelas.isNotEmpty) _chip(Icons.segment_outlined, Session.kelas),
-              if (Session.status.isNotEmpty) _chip(Icons.verified_user_outlined, Session.status),
-              if (_ttl.isNotEmpty) _chip(Icons.cake_outlined, _ttl),
-              if (Session.role == 'siswa' && Session.waliNama.isNotEmpty)
-                _chip(Icons.family_restroom_outlined, 'Wali: ${Session.waliNama}'),
+              _heroTile(
+                icon: Icons.badge_outlined,
+                label: 'NIS',
+                value: Session.nis.isEmpty ? '-' : Session.nis,
+              ),
+              const SizedBox(width: 8),
+              _heroTile(
+                icon: Icons.perm_identity_outlined,
+                label: 'NISN',
+                value: Session.nisn.isEmpty ? '-' : Session.nisn,
+              ),
             ],
           ),
-          if (Session.alamat.isNotEmpty) ...[
-            const SizedBox(height: 10),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _heroTile(
+                icon: Icons.verified_user_outlined,
+                label: 'Status',
+                value: Session.status.isEmpty ? 'Aktif' : Session.status,
+              ),
+              const SizedBox(width: 8),
+              if (Session.kelas.isNotEmpty)
+                _heroTile(
+                  icon: Icons.segment_outlined,
+                  label: 'Kelas',
+                  value: Session.kelas,
+                )
+              else
+                const Spacer(),
+            ],
+          ),
+          if (_ttl.isNotEmpty) ...[
+            const SizedBox(height: 8),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.home_outlined,
-                    size: 15, color: Colors.white.withValues(alpha: 0.85)),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    '$_roleLabel • ${Session.alamat}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9), fontSize: 11.5),
-                  ),
+                _heroTile(
+                  icon: Icons.cake_outlined,
+                  label: 'Tempat & Tanggal Lahir',
+                  value: _ttl,
+                ),
+              ],
+            ),
+          ],
+          if (Session.alamat.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _heroTile(
+                  icon: Icons.home_outlined,
+                  label: 'Alamat Rumah',
+                  value: Session.alamat,
                 ),
               ],
             ),
@@ -258,28 +309,62 @@ class _BerandaTabState extends State<BerandaTab> {
     return '$t, $d';
   }
 
-  Widget _chip(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(9),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: 13),
-          const SizedBox(width: 5),
-          Text(label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
-        ],
+  Widget _heroTile({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 15, color: Colors.white.withValues(alpha: 0.9)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label,
+                      style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.72),
+                          fontSize: 10.5)),
+                  const SizedBox(height: 2),
+                  Text(value,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700)),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   // ------------------------------------------------------------------- menu
+  Widget _menuBox() {
+    final s = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 14, 10, 14),
+      decoration: BoxDecoration(
+        color: s.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: s.outlineVariant.withValues(alpha: 0.4)),
+      ),
+      child: _menuGrid(),
+    );
+  }
+
   Widget _menuGrid() {
     final items = [
       _MenuItem(Icons.payments_outlined, 'Pembayaran', Colors.green, () => widget.onNavigate(2)),

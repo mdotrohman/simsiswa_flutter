@@ -14,6 +14,14 @@ lama untuk siswa & wali. Satu codebase Flutter.
   Sistem Informasi Manajemen**. Tombol **Masuk** menuju halaman login; dari login
   tersedia tombol **Beranda** untuk kembali ke index. Pengguna yang sudah login
   **langsung** masuk ke menu utama (index dilewati).
+- **Beranda (home) premium**: hero profil siswa bergradien menampilkan nama lengkap,
+  peran, **NIS/NISN, status, tempat & tanggal lahir, dan alamat rumah** (data
+  diambil dari `POST app/api/apk/siswa/profil` saat login, fallback ke data login;
+  baris yang datanya belum tersedia disembunyikan). Menu layanan disusun sebagai
+  kotak (card) berisi grid navigasi 5 kolom dengan ikon warna besar, tombol badge
+  **Menu lainnya** di ujung kanan judul membuka **17 menu** dalam grup
+  expand/collapse (Pembelajaran, Keuangan, Kehadiran, Informasi). Di bawahnya:
+  Aktivitas Terakhir, Pengumuman, Lainnya (notifikasi/tema/privasi), dan Keluar.
 - **Tema Material You**: seluruh pewarnaan (background, appbar, nav, kartu, login)
   mengikuti color scheme wallpaper Android; fallback ke seed emerald brand bila
   dynamic color tak tersedia.
@@ -109,7 +117,9 @@ armeabi-v7a; x86_64 dipisah untuk emulator) — sertifikat resmi SHA-256
 
 - `lib/index/index_page.dart` — halaman index (portal profil madrasah) sebelum login.
 - `lib/auth/login_page.dart` — login siswa/wali (label sesuai kontrak server).
-- `lib/tabs/beranda_tab.dart` — beranda + penanganan error dashboard.
+- `lib/tabs/beranda_tab.dart` — beranda premium: hero profil siswa, menu layanan
+  (kotak navigasi 5 kolom + badge "Menu lainnya" 17 menu expand/collapse),
+  aktivitas, pengumuman, dan keluar.
 - `lib/core/api.dart`, `lib/core/session.dart` — klien API & sesi.
 - `lib/models/login.dart`, `lib/models/profil.dart` — model kontrak API (login & profil publik).
 - `lib/core/credential_store.dart` — sandi tersimpan terenkripsi (Keystore/Keychain).
