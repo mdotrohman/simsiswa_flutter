@@ -5,8 +5,8 @@ import '../auth/login_page.dart';
 import '../core/api.dart';
 import '../models/profil.dart';
 
-/// Halaman index (portal) — menampilkan profil publik madrasah sebelum masuk ke
-/// login (mengikuti konsep SplashActivity di aplikasi Java versi lama).
+/// Halaman index (portal) — hanya untuk pengguna yang belum login. Menampilkan
+/// profil publik madrasah + brand aplikasi sebelum masuk ke login.
 class IndexPage extends StatefulWidget {
   const IndexPage({super.key});
 
@@ -52,19 +52,55 @@ class _IndexPageState extends State<IndexPage> {
     }
   }
 
-  Future<void> _launch(String raw) async {
-    final value = raw.trim();
-    if (value.isEmpty) return;
-    var url = value;
+  void _goToLogin() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+    );
+  }
+
+  // --- action pembuka tautan sesuai jenis data ---
+  Future<void> _open(Uri uri) async {
+    try {
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!ok && mounted) _toast('Tidak dapat membuka tautan');
+    } catch (_) {
+      if (mounted) _toast('Tidak dapat membuka tautan');
+    }
+  }
+
+  Future<void> _launchWeb(String raw) async {
+    var url = raw.trim();
+    if (url.isEmpty) return;
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       url = 'https://$url';
     }
-    try {
-      final ok = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-      if (!ok && mounted) _toast('Tidak dapat membuka $value');
-    } catch (_) {
-      if (mounted) _toast('Tidak dapat membuka $value');
+    await _open(Uri.parse(url));
+  }
+
+  Future<void> _launchTel(String raw) async {
+    final digits = raw.replaceAll(RegExp(r'[^\d+]'), '');
+    if (digits.isEmpty) return;
+    await _open(Uri(scheme: 'tel', path: digits));
+  }
+
+  Future<void> _launchMail(String raw) async {
+    final email = raw.trim();
+    if (email.isEmpty) return;
+    await _open(Uri(scheme: 'mailto', path: email));
+  }
+
+  Future<void> _launchWa(String raw) async {
+    var v = raw.trim();
+    if (v.isEmpty) return;
+    if (v.contains('wa.me') || v.contains('whatsapp')) {
+      if (!v.startsWith('http')) v = 'https://$v';
+      await _open(Uri.parse(v));
+      return;
     }
+    var digits = v.replaceAll(RegExp(r'[^\d]'), '');
+    if (digits.isEmpty) return;
+    if (digits.startsWith('0')) digits = '62${digits.substring(1)}';
+    await _open(Uri.parse('https://wa.me/$digits'));
   }
 
   void _toast(String msg) {
@@ -72,17 +108,10 @@ class _IndexPageState extends State<IndexPage> {
         .showSnackBar(SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating));
   }
 
-  void _goToLogin() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final s = Theme.of(context).colorScheme;
     final profil = _data?.profil;
-    final statistik = _data?.statistik;
 
     return Scaffold(
       body: SafeArea(
@@ -109,7 +138,7 @@ class _IndexPageState extends State<IndexPage> {
                     else if (_error != null)
                       _errorCard(s, _error!)
                     else ...[
-                      if (statistik != null) _statisticsCard(s, statistik),
+                      _brandCard(s),
                       _identityCard(s, profil),
                       _informasiCard(s, profil),
                       _kontakCard(s, profil),
@@ -127,6 +156,7 @@ class _IndexPageState extends State<IndexPage> {
     );
   }
 
+  // ---------------------------------------------------------------- hero
   Widget _hero(ColorScheme s, Profil? p) {
     final nama = p?.namaMadrasah.isNotEmpty == true ? p!.namaMadrasah : 'SIM Siswa MTsB.U';
 
@@ -138,33 +168,39 @@ class _IndexPageState extends State<IndexPage> {
     final alamatParts = <String>[
       if (p?.alamat.isNotEmpty == true) p!.alamat,
       if (p?.desaKelurahan.isNotEmpty == true) p!.desaKelurahan,
-      if (p?.kecamatan.isNotEmpty == true) p!.kecamatan,
       if (p?.kabupaten.isNotEmpty == true) p!.kabupaten,
       if (p?.provinsi.isNotEmpty == true) p!.provinsi,
     ];
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 28),
+      padding: const EdgeInsets.fromLTRB(24, 30, 24, 30),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color.lerp(s.primary, Colors.black, 0.35)!, s.primary],
+          colors: [Color.lerp(s.primary, Colors.black, 0.4)!, s.primary],
         ),
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
       ),
       child: Column(
         children: [
+          // Emblem premium: cincin ganda + logo
           Container(
-            width: 84,
-            height: 84,
+            width: 96,
+            height: 96,
+            padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
             ),
-            child: const Icon(Icons.school_rounded, size: 46, color: Colors.white),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.16),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.school_rounded, size: 48, color: Colors.white),
+            ),
           ),
           const SizedBox(height: 18),
           Text(
@@ -205,8 +241,7 @@ class _IndexPageState extends State<IndexPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.place_rounded,
-                    size: 16, color: Colors.white.withValues(alpha: 0.85)),
+                Icon(Icons.place_rounded, size: 16, color: Colors.white.withValues(alpha: 0.85)),
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(
@@ -227,321 +262,350 @@ class _IndexPageState extends State<IndexPage> {
     );
   }
 
-  Widget _loadingCard(ColorScheme s) {
-    return _sectionShell(
-      s,
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 36),
-        child: Column(
-          children: [
-            const SizedBox(
-              width: 30,
-              height: 30,
-              child: CircularProgressIndicator(strokeWidth: 3),
-            ),
-            const SizedBox(height: 16),
-            Text('Memuat profil madrasah…', style: TextStyle(color: s.onSurfaceVariant)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _errorCard(ColorScheme s, String msg) {
-    return _sectionShell(
-      s,
-      Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Icon(Icons.cloud_off_rounded, size: 40, color: s.error),
-            const SizedBox(height: 12),
-            Text(
-              msg,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: s.onSurfaceVariant, height: 1.4),
-            ),
-            const SizedBox(height: 16),
-            OutlinedButton.icon(
-              onPressed: _fetch,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Coba Lagi'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _statisticsCard(ColorScheme s, Statistik st) {
-    Widget stat(IconData icon, String value, String label) {
-      return Expanded(
-        child: _statTile(
-          s,
-          Column(
-            children: [
-              Icon(icon, size: 22, color: s.onPrimary),
-              const SizedBox(height: 8),
-              Text(value, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 2),
-              Text(label, style: TextStyle(fontSize: 11.5, color: s.onSurfaceVariant)),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final periode = [if (st.tahunAjaran.isNotEmpty) st.tahunAjaran, if (st.semester.isNotEmpty) st.semester];
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-      child: Column(
-        children: [
-          Row(children: [
-            stat(Icons.people_alt_rounded, '${st.totalSiswa}', 'Siswa'),
-            const SizedBox(width: 10),
-            stat(Icons.school_rounded, '${st.jumlahGuru}', 'Guru'),
-            const SizedBox(width: 10),
-            stat(Icons.meeting_room_rounded, '${st.jumlahRombel}', 'Rombel'),
-          ]),
-          if (periode.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: s.primaryContainer,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.calendar_month_rounded, size: 16, color: s.onPrimaryContainer),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Periode: ${periode.join(' · ')}',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: s.onPrimaryContainer,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _statTile(ColorScheme s, Widget child) {
+  // ------------------------------------------------------- brand (pengganti statistik)
+  Widget _brandCard(ColorScheme s) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 6),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [s.primary, Color.lerp(s.primary, Colors.black, 0.25)!],
+          colors: [
+            s.primary.withValues(alpha: 0.12),
+            s.primaryContainer.withValues(alpha: 0.5),
+            s.surfaceContainerLow,
+          ],
+          stops: const [0, 0.4, 1],
         ),
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: s.primary.withValues(alpha: 0.25),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: s.primary.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              // Hub mark
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [s.primary, Color.lerp(s.primary, Colors.black, 0.35)!],
+                  ),
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: s.primary.withValues(alpha: 0.45),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.apps_rounded, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Sistem Informasi Manajemen',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, height: 1.2),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      'Pelayanan Terpadu Satu Pintu · Ekosistem Pendidikan',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: s.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 14),
+            child: Divider(height: 1),
+          ),
+          Text(
+            'SIM adalah pusat kendali digital yang mengintegrasikan seluruh layanan '
+            'administrasi dan akademik sekolah ke dalam satu pintu. Dirancang khusus '
+            'untuk memudahkan pelaporan, menciptakan ekosistem pendidikan yang lebih '
+            'efisien, transparan, dan kekinian.',
+            textAlign: TextAlign.justify,
+            style: TextStyle(
+              fontSize: 13.5,
+              height: 1.55,
+              color: s.onSurfaceVariant,
+            ),
           ),
         ],
-      ),
-      child: DefaultTextStyle(
-        style: TextStyle(color: s.onPrimary),
-        child: child,
       ),
     );
   }
 
+  // ------------------------------------------------------------ identitas
   Widget _identityCard(ColorScheme s, Profil? p) {
     if (p == null) return const SizedBox.shrink();
-    final rows = <(String, String)>[];
-    void add(String k, String v) {
-      if (v.isNotEmpty) rows.add((k, v));
+    final rows = <(IconData, String, String)>[];
+    void add(IconData icon, String k, String v) {
+      if (v.isNotEmpty) rows.add((icon, k, v));
     }
 
-    add('NPSN', p.npsn);
-    add('NSM', p.nsm);
-    add('Jenjang', p.jenjang);
-    add('Status', p.statusMadrasah);
-    add('Akreditasi', p.akreditasi);
-    add('Berdiri', p.tahunBerdiri);
-    add('Kepala Madrasah', p.namaKepala);
-    add('Kurikulum', p.namaKurikulum);
+    add(Icons.badge_rounded, 'NPSN', p.npsn);
+    add(Icons.school_rounded, 'NSM', p.nsm);
+    add(Icons.stairs_rounded, 'Jenjang', p.jenjang);
+    add(Icons.verified_rounded, 'Status', p.statusMadrasah);
+    add(Icons.star_rounded, 'Akreditasi', p.akreditasi);
+    add(Icons.calendar_month_rounded, 'Berdiri', p.tahunBerdiri);
+    add(Icons.manage_accounts_rounded, 'Kepala Madrasah', p.namaKepala);
+    add(Icons.menu_book_rounded, 'Kurikulum', p.namaKurikulum);
 
     return _sectionCard(
       s,
       title: 'Identitas Madrasah',
       icon: Icons.badge_rounded,
-      child: _rowsList(s, rows),
+      child: _keyValueRows(s, rows),
     );
   }
 
   Widget _informasiCard(ColorScheme s, Profil? p) {
     if (p == null) return const SizedBox.shrink();
-    final rows = <(String, String)>[];
-    void add(String k, String v) {
-      if (v.isNotEmpty) rows.add((k, v));
+    final rows = <(IconData, String, String)>[];
+    void add(IconData icon, String k, String v) {
+      if (v.isNotEmpty) rows.add((icon, k, v));
     }
 
-    add('Yayasan', p.namaYayasan);
-    add('Ketua Yayasan', p.ketuaYayasan);
-    add('Kode Pos', p.kodePos);
-    add('Email', p.email);
-    add('Website', p.websiteResmi);
+    add(Icons.apartment_rounded, 'Yayasan', p.namaYayasan);
+    add(Icons.people_alt_rounded, 'Ketua Yayasan', p.ketuaYayasan);
+    add(Icons.local_post_office_rounded, 'Kode Pos', p.kodePos);
 
+    if (rows.isEmpty) return const SizedBox.shrink();
     return _sectionCard(
       s,
       title: 'Informasi',
       icon: Icons.info_outline_rounded,
-      child: _rowsList(s, rows),
+      child: _keyValueRows(s, rows),
     );
   }
 
+  // --------------------------------------------------------------- kontak
   Widget _kontakCard(ColorScheme s, Profil? p) {
     if (p == null) return const SizedBox.shrink();
-    final kontak = <(String, String, String)>[];
-    void add(String label, String v) {
-      if (v.isNotEmpty) kontak.add((label, v, v));
+    final items = <(String, String, IconData, Color, VoidCallback)>[];
+    if (p.whatsapp.isNotEmpty) {
+      items.add(('WhatsApp', p.whatsapp, Icons.chat_rounded, const Color(0xFF25D366),
+          () => _launchWa(p.whatsapp)));
+    }
+    if (p.telepon.isNotEmpty) {
+      items.add(('Telepon', p.telepon, Icons.call_rounded, s.primary,
+          () => _launchTel(p.telepon)));
+    }
+    if (p.email.isNotEmpty) {
+      items.add(('Email', p.email, Icons.mail_rounded, s.tertiary,
+          () => _launchMail(p.email)));
+    }
+    if (p.websiteResmi.isNotEmpty) {
+      items.add(('Website', p.websiteResmi, Icons.language_rounded, s.secondary,
+          () => _launchWeb(p.websiteResmi)));
     }
 
-    add('WhatsApp', p.whatsapp);
-    add('Telepon', p.telepon);
-    add('Email', p.email);
-    add('Website', p.websiteResmi);
-
-    if (kontak.isEmpty) return const SizedBox.shrink();
+    if (items.isEmpty) return const SizedBox.shrink();
     return _sectionCard(
       s,
       title: 'Kontak',
-      icon: Icons.call_rounded,
-      child: _dense(kontak),
+      icon: Icons.contact_phone_rounded,
+      child: Column(
+        children: [
+          for (var i = 0; i < items.length; i++) ...[
+            if (i > 0)
+              Divider(height: 1, thickness: 0.7, color: s.outlineVariant.withValues(alpha: 0.35)),
+            _actionTile(
+              s,
+              color: items[i].$4,
+              icon: items[i].$3,
+              title: items[i].$1,
+              subtitle: items[i].$2,
+              onTap: items[i].$5,
+            ),
+          ],
+        ],
+      ),
     );
   }
 
+  // ---------------------------------------------------------- media sosial
   Widget _socialCard(ColorScheme s, Profil? p) {
     if (p == null) return const SizedBox.shrink();
-    final sosmed = <(String, String, String)>[
-      ('IG', 'Instagram', p.instagram),
-      ('FB', 'Facebook', p.facebook),
-      ('YT', 'YouTube', p.youtube),
-      ('TT', 'TikTok', p.tiktok),
-      ('X', 'X', p.twitter),
-      ('WA', 'WhatsApp', p.whatsapp),
-    ].where((e) => e.$3.isNotEmpty).toList();
+    final sosmed = <(String, IconData?, String?, List<Color>, String)>[
+      ('Instagram', Icons.camera_alt, null,
+          const [Color(0xFFF58529), Color(0xFFDD2A7B), Color(0xFF8134AF)], p.instagram),
+      ('Facebook', Icons.facebook, null, const [Color(0xFF1877F2), Color(0xFF0E5FC8)], p.facebook),
+      ('YouTube', Icons.play_arrow_rounded, null,
+          const [Color(0xFFFF0000), Color(0xFFC00000)], p.youtube),
+      ('TikTok', Icons.music_note_rounded, null,
+          const [Color(0xFF010101), Color(0xFF3A3A3A)], p.tiktok),
+      ('X', null, 'X', const [Color(0xFF0F1419), Color(0xFF343A40)], p.twitter),
+      ('WhatsApp', Icons.chat_rounded, null,
+          const [Color(0xFF25D366), Color(0xFF128C7E)], p.whatsapp),
+    ].where((e) => e.$5.isNotEmpty).toList();
 
     if (sosmed.isEmpty) return const SizedBox.shrink();
     return _sectionCard(
       s,
       title: 'Media Sosial',
       icon: Icons.public_rounded,
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: sosmed
-            .map((e) => _socialBadge(s, symbol: e.$1, name: e.$2, url: e.$3))
-            .toList(),
+      child: Column(
+        children: [
+          for (var i = 0; i < sosmed.length; i++) ...[
+            if (i > 0)
+              Divider(height: 1, thickness: 0.7, color: s.outlineVariant.withValues(alpha: 0.35)),
+            _actionTile(
+              s,
+              gradient: sosmed[i].$4,
+              icon: sosmed[i].$2,
+              glyph: sosmed[i].$3,
+              title: sosmed[i].$1,
+              subtitle: _shortUrl(sosmed[i].$5),
+              onTap: () => _launchWeb(sosmed[i].$5),
+            ),
+          ],
+        ],
       ),
     );
   }
 
-  Widget _socialBadge(ColorScheme s, {required String symbol, required String name, required String url}) {
+  String _shortUrl(String url) {
+    return url
+        .replaceAll(RegExp(r'^https?://'), '')
+        .replaceAll(RegExp(r'^www\.'), '')
+        .replaceAll(RegExp(r'/$'), '');
+  }
+
+  // ------------------------------------------------------------- tile umum
+  Widget _actionTile(
+    ColorScheme s, {
+    Color? color,
+    IconData? icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    List<Color>? gradient,
+    String? glyph,
+  }) {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap: () => _launch(url),
-      child: Container(
-        width: 84,
+      onTap: onTap,
+      child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: s.primary.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: s.primary.withValues(alpha: 0.2)),
-        ),
-        child: Column(
+        child: Row(
           children: [
-            Text(symbol,
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: s.primary)),
-            const SizedBox(height: 2),
-            Text(name,
-                style: TextStyle(fontSize: 10.5, color: s.onSurfaceVariant),
-                maxLines: 1, overflow: TextOverflow.ellipsis),
+            _avatar(s, color: color, icon: icon, gradient: gradient, glyph: glyph),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12, color: s.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.open_in_new_rounded, size: 16, color: s.onSurfaceVariant),
           ],
         ),
       ),
     );
   }
 
-  Widget _rowsList(ColorScheme s, List<(String, String)> rows) {
+  Widget _avatar(
+    ColorScheme s, {
+    Color? color,
+    IconData? icon,
+    List<Color>? gradient,
+    String? glyph,
+  }) {
+    final box = BoxDecoration(
+      gradient: gradient == null
+          ? null
+          : LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: gradient),
+      color: gradient == null ? (color ?? Colors.transparent).withValues(alpha: 0.14) : null,
+      borderRadius: BorderRadius.circular(13),
+    );
+    return Container(
+      width: 42,
+      height: 42,
+      decoration: box,
+      child: gradient != null
+          ? Center(
+              child: glyph != null
+                  ? Text(glyph,
+                      style: const TextStyle(
+                          color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800))
+                  : Icon(icon, color: Colors.white, size: 21),
+            )
+          : Center(child: Icon(icon, color: color, size: 21)),
+    );
+  }
+
+  Widget _keyValueRows(ColorScheme s, List<(IconData, String, String)> rows) {
     return Column(
       children: [
         for (var i = 0; i < rows.length; i++) ...[
-          if (i > 0) Divider(height: 1, thickness: 0.7, color: s.outlineVariant.withValues(alpha: 0.35)),
+          if (i > 0)
+            Divider(height: 1, thickness: 0.7, color: s.outlineVariant.withValues(alpha: 0.35)),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: 9),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(rows[i].$1,
-                      style: TextStyle(fontSize: 12.5, color: s.onSurfaceVariant)),
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: s.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: Icon(rows[i].$1, size: 18, color: s.primary),
                 ),
                 const SizedBox(width: 12),
-                Flexible(
+                Expanded(
                   flex: 2,
-                  child: Text(
-                    rows[i].$2,
-                    textAlign: TextAlign.end,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: s.onSurface,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(rows[i].$2,
+                          style: TextStyle(fontSize: 11.5, color: s.onSurfaceVariant)),
+                      const SizedBox(height: 1),
+                      Text(
+                        rows[i].$3,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: s.onSurface,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
         ],
-      ],
-    );
-  }
-
-  Widget _dense(List<(String, String, String)> rows) {
-    return Column(
-      children: [
-        for (var i = 0; i < rows.length; i++)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () => _launch(rows[i].$3),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 7),
-                child: Row(
-                  children: [
-                    Text(rows[i].$1,
-                        style: TextStyle(fontSize: 12.5, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                    const Spacer(),
-                    Flexible(
-                      child: Text(
-                        rows[i].$2,
-                        textAlign: TextAlign.end,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    const Icon(Icons.open_in_new_rounded, size: 14),
-                  ],
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }
@@ -593,6 +657,53 @@ class _IndexPageState extends State<IndexPage> {
     );
   }
 
+  Widget _loadingCard(ColorScheme s) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 16),
+      decoration: BoxDecoration(
+        color: s.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: s.outlineVariant.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(width: 30, height: 30, child: CircularProgressIndicator(strokeWidth: 3)),
+          const SizedBox(height: 16),
+          Text('Memuat profil madrasah…', style: TextStyle(color: s.onSurfaceVariant)),
+        ],
+      ),
+    );
+  }
+
+  Widget _errorCard(ColorScheme s, String msg) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: s.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: s.outlineVariant.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.cloud_off_rounded, size: 40, color: s.error),
+          const SizedBox(height: 12),
+          Text(msg,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: s.onSurfaceVariant, height: 1.4)),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: _fetch,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Coba Lagi'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // -------------------------------------------------------------- bawah
   Widget _bottomBar(ColorScheme s) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
