@@ -195,10 +195,10 @@ class _OldNavItem extends StatelessWidget {
                   duration: const Duration(milliseconds: 320),
                   curve: Curves.easeOut,
                   child: Transform.translate(
-                    offset: const Offset(0, 21),
+                    offset: const Offset(0, 36),
                     child: CustomPaint(
                       painter: const _WhiteFlashPainter(),
-                      child: const SizedBox(width: 90, height: 90),
+                      child: const SizedBox(width: 102, height: 102),
                     ),
                   ),
                 ),
