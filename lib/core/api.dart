@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/login.dart';
+import '../models/profil.dart';
 import 'session.dart';
 
 const String kApiBaseUrl = 'https://sim.mtsbutambakberas.sch.id/';
@@ -85,6 +86,15 @@ class Api {
       throw ApiException(200, resp.message.isEmpty ? 'Login gagal' : resp.message);
     }
     return resp.data!;
+  }
+
+  static Future<ProfilResponse> publicProfil() async {
+    final json = await _send('GET', 'app/api/apk/siswa/public_profil');
+    final resp = ProfilResponse.fromJson(json);
+    if (!resp.ok || resp.profil == null) {
+      throw ApiException(200, resp.message.isEmpty ? 'Data profil tidak tersedia' : resp.message);
+    }
+    return resp;
   }
 
   static Future<Map<String, dynamic>> dashboard() => _send('GET', 'api/dashboard');

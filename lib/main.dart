@@ -5,8 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'core/session.dart';
 import 'core/theme.dart';
-import 'auth/login_page.dart';
-import 'shell/main_shell.dart';
+import 'index/index_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -73,7 +72,7 @@ class _HomeState extends State<_Home> {
     if (!Session.ready) {
       return const _BootSplash();
     }
-    return Session.isLoggedIn() ? const MainShell() : const LoginPage();
+    return const IndexPage();
   }
 }
 

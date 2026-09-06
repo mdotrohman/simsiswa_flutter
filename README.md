@@ -3,6 +3,18 @@
 Aplikasi mobile **SIM Siswa MTs Bahrul Ulum Tambakberas** — pengganti aplikasi Java
 lama untuk siswa & wali. Satu codebase Flutter.
 
+## Fitur
+
+- **Halaman index (portal)**: menampilkan profil publik madrasah sebelum login —
+  nama, tagline, alamat, statistik siswa/guru/rombel + periode, kartu identitas
+  (NPSN, NSM, akreditasi, kepala, kurikulum), informasi, kontak, dan media sosial
+  yang bisa dibuka langsung. Data dari `GET app/api/apk/siswa/public_profil`
+  (kontrak sama dengan aplikasi versi lama).
+- **Tema Material You**: seluruh pewarnaan (background, appbar, nav, kartu, login)
+  mengikuti color scheme wallpaper Android; fallback ke seed emerald brand bila
+  dynamic color tak tersedia.
+- **Bottom nav premium**: piring bercahaya dengan kilatan putih persisten di menu
+  aktif (mengikuti warna ternary/primary dari wallpaper).
 - **Android**: API 21 (Android 5.0) → terbaru; ABI `arm64-v8a`, `armeabi-v7a` (32-bit),
   `x86_64` (emulator).
 - **iOS**: iOS 13.0 (iPhone 6s/SE/7 ke atas) → terbaru; device & simulator.
@@ -91,10 +103,13 @@ armeabi-v7a; x86_64 dipisah untuk emulator) — sertifikat resmi SHA-256
 
 ## Struktur Proyek
 
+- `lib/index/index_page.dart` — halaman index (portal profil madrasah) sebelum login.
 - `lib/auth/login_page.dart` — login siswa/wali (label sesuai kontrak server).
 - `lib/tabs/beranda_tab.dart` — beranda + penanganan error dashboard.
 - `lib/core/api.dart`, `lib/core/session.dart` — klien API & sesi.
+- `lib/models/login.dart`, `lib/models/profil.dart` — model kontrak API (login & profil publik).
 - `lib/core/credential_store.dart` — sandi tersimpan terenkripsi (Keystore/Keychain).
+- `lib/core/theme.dart` — tema Material You (color scheme adaptif + fallback brand).
 - `docs/build-arm64.md` — resep lengkap build arm64 (termasuk injeksi lib).
 
 ## Testing
