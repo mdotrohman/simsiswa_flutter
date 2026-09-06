@@ -14,10 +14,11 @@ lama untuk siswa & wali. Satu codebase Flutter.
   Sistem Informasi Manajemen**. Tombol **Masuk** menuju halaman login; dari login
   tersedia tombol **Beranda** untuk kembali ke index. Pengguna yang sudah login
   **langsung** masuk ke menu utama (index dilewati).
-- **Beranda (home) premium**: hero profil siswa bergradien menampilkan nama lengkap,
-  peran, **NIS/NISN, status, tempat & tanggal lahir, dan alamat rumah** (data
-  diambil dari `POST app/api/apk/siswa/profil` saat login, fallback ke data login;
-  baris yang datanya belum tersedia disembunyikan). Menu layanan disusun sebagai
+- **Beranda (home) premium**: hero profil siswa bergradien — badge **status** di ujung
+  kanan baris salam, **2 kolom data** (NIS/NISN digabung | Tempat & Tanggal Lahir),
+  dan **Alamat Rumah satu kolom full-width** (data diambil dari
+  `POST app/api/apk/siswa/profil` saat login dengan fallback ke data login; kolom
+  tetap tampil dengan "-" bila datanya belum tersedia). Menu layanan disusun sebagai
   kotak (card) berisi grid navigasi 5 kolom dengan ikon warna besar, tombol badge
   **Menu lainnya** di ujung kanan judul membuka **17 menu** dalam grup
   expand/collapse (Pembelajaran, Keuangan, Kehadiran, Informasi). Di bawahnya:
@@ -35,6 +36,10 @@ lama untuk siswa & wali. Satu codebase Flutter.
   (`lib/core/credential_store.dart`, `flutter_secure_storage`) dan terisi otomatis di login berikutnya.
 - Backend: `https://sim.mtsbutambakberas.sch.id`
 - Kontrak login: `POST app/api/apk/siswa/login` dengan JSON `{username, password, role}`.
+- Kontrak profil siswa: `POST app/api/apk/siswa/profil` dengan JSON `{siswa_id}` →
+  `data.siswa` (nis, nisn, nama_lengkap, status, tempat_lahir, tanggal_lahir, alamat
+  lengkap, dst.). Dipakai hero beranda; jatuh ke data login bila belum tersedia.
+- Nomor versi memakai 3 digit belakang (mis. `v1.411`), naik satu per build.
 
 ## Cara Build (rekomendasi dari pengalaman nyata)
 
