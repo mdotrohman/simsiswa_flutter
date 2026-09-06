@@ -82,13 +82,14 @@ class _BootSplash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [kPrimaryDark, kPrimary],
+            colors: [Color.lerp(s.primary, Colors.black, 0.35)!, s.primary],
           ),
         ),
         child: const Center(

@@ -116,11 +116,8 @@ class _MainShellState extends State<MainShell> {
   }
 }
 
-const _kNavGreen = Color(0xFF00664F);
-const _kNavRim = Color(0xFF004A3A);
-const _kActiveDisc = Color(0xFF10B981);
-
-/// Bilah nav bawah gaya app lama.
+/// Bilah nav bawah gaya app lama — warna mengikuti color scheme Android
+/// (Material You): bar = primary wallpaper, piring aktif = tertiary.
 class _OldBottomNav extends StatelessWidget {
   const _OldBottomNav({required this.selected, required this.onSelect});
 
@@ -129,11 +126,12 @@ class _OldBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
     return Container(
       height: 74,
-      decoration: const BoxDecoration(
-        color: _kNavGreen,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: s.primary,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       clipBehavior: Clip.none,
       child: Row(
@@ -171,6 +169,8 @@ class _OldNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    final rim = Color.lerp(s.primary, Colors.black, 0.35)!;
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -213,7 +213,7 @@ class _OldNavItem extends StatelessWidget {
                     ),
                     child: const SizedBox(width: 82, height: 82),
                   ),
-                // Piring aktif: satu aksen emerald bersih + rim tipis.
+                // Piring aktif: aksen tertiary skema (ikut wallpaper) + rim.
                 AnimatedScale(
                   scale: active ? 1.30 : 0.001,
                   duration: const Duration(milliseconds: 240),
@@ -223,8 +223,8 @@ class _OldNavItem extends StatelessWidget {
                     height: 52,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _kActiveDisc,
-                      border: Border.all(color: _kNavRim, width: 2),
+                      color: s.tertiary,
+                      border: Border.all(color: rim, width: 2),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.25),
@@ -242,7 +242,7 @@ class _OldNavItem extends StatelessWidget {
                   child: Icon(
                     icon,
                     size: active ? 30 : 24,
-                    color: Colors.white,
+                    color: active ? s.onTertiary : s.onPrimary,
                   ),
                 ),
               ],
@@ -262,7 +262,7 @@ class _OldNavItem extends StatelessWidget {
               child: Text(
                 label,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: s.onPrimary,
                   fontSize: 11,
                   letterSpacing: 0.3,
                   fontWeight: active ? FontWeight.w700 : FontWeight.w400,

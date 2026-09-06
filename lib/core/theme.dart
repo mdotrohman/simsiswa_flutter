@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 
-// Identitas brand madrasah (dipakai di mode terang & gelap).
+// Warna seed brand madrasah — dipakai hanya sebagai fallback (saat dynamic
+// color tidak tersedia). Dengan dynamic scheme (Material You), warna asli
+// diambil dari color scheme yang mengikuti wallpaper Android.
 const kPrimary = Color(0xFF047857);
-const kPrimaryDark = Color(0xFF064E3B);
-const kPrimaryLight = Color(0xFF34D399);
-const kAccent = Color(0xFF10B981);
-const kBackground = Color(0xFFF0FDF4);
-const kTextPrimary = Color(0xFF111827);
-const kTextSecondary = Color(0xFF6B7280);
-const kNavGreen = Color(0xFF00664F);
 
 /// Tema premium: terang & gelap. Bila [dynamicScheme] diberikan (dari
 /// DynamicColorBuilder — warna adaptif wallpaper ala Android 12+/16),
@@ -22,20 +17,21 @@ ThemeData buildAppTheme(Brightness brightness, {ColorScheme? dynamicScheme}) {
         dynamicSchemeVariant: DynamicSchemeVariant.content,
       );
 
-  final appBar = light ? kPrimaryDark : const Color(0xFF01231C);
+  final appBar = light
+      ? scheme.primary
+      : Color.lerp(scheme.primary, Colors.black, 0.4)!;
 
   final base = ThemeData(
     useMaterial3: true,
     brightness: brightness,
     colorScheme: scheme,
-    scaffoldBackgroundColor:
-        light ? kBackground : const Color(0xFF081512),
+    scaffoldBackgroundColor: scheme.surface,
   );
 
   return base.copyWith(
     appBarTheme: AppBarTheme(
       backgroundColor: appBar,
-      foregroundColor: Colors.white,
+      foregroundColor: scheme.onPrimary,
       elevation: 0,
       centerTitle: true,
       titleTextStyle: const TextStyle(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../core/session.dart';
-import '../core/theme.dart';
 import '../auth/login_page.dart';
 
 class ProfilTab extends StatefulWidget {
@@ -43,8 +42,10 @@ class _ProfilTabState extends State<ProfilTab> {
               children: [
                 CircleAvatar(
                   radius: 36,
-                  backgroundColor: kPrimary.withValues(alpha: 0.12),
-                  child: const Icon(Icons.person, size: 40, color: kPrimary),
+                  backgroundColor:
+                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                  child: Icon(Icons.person, size: 40,
+                      color: Theme.of(context).colorScheme.primary),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -114,7 +115,7 @@ class _ProfilTabState extends State<ProfilTab> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          Icon(icon, color: kPrimary, size: 20),
+          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

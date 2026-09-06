@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../core/api.dart';
 import '../core/credential_store.dart';
 import '../core/session.dart';
-import '../core/theme.dart';
 import '../shell/main_shell.dart';
 
 class LoginPage extends StatefulWidget {
@@ -110,7 +109,8 @@ class _LoginPageState extends State<LoginPage> {
     final act = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        icon: const Icon(Icons.shield_outlined, color: kPrimary),
+        icon: Icon(Icons.shield_outlined,
+            color: Theme.of(ctx).colorScheme.primary),
         title: const Text('Simpan sandi?'),
         content: Text(
           'Simpan $username agar login berikutnya otomatis terisi? '
@@ -141,13 +141,14 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [kPrimaryDark, kPrimary],
+            colors: [Color.lerp(s.primary, Colors.black, 0.35)!, s.primary],
           ),
         ),
         child: SafeArea(
@@ -177,7 +178,7 @@ class _LoginPageState extends State<LoginPage> {
                   _buildCard(),
                   const SizedBox(height: 16),
                   const Text(
-                    'v1.19 Premium',
+                    'v1.25 Premium',
                     style: TextStyle(color: Colors.white54, fontSize: 12),
                   ),
                 ],
@@ -297,7 +298,7 @@ class _LoginPageState extends State<LoginPage> {
             child: FilledButton.icon(
               onPressed: _loading ? null : _attemptLogin,
               style: FilledButton.styleFrom(
-                backgroundColor: kPrimary,
+                backgroundColor: scheme.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -326,11 +327,12 @@ class _Logo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
     return Container(
       width: 88,
       height: 88,
       decoration: BoxDecoration(
-        color: kPrimaryLight.withValues(alpha: 0.25),
+        color: s.primary.withValues(alpha: 0.25),
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white70, width: 2),
       ),

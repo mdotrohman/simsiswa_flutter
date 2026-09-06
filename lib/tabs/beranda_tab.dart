@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../core/api.dart';
 import '../core/session.dart';
-import '../core/theme.dart';
 
 class BerandaTab extends StatefulWidget {
   final void Function(int index) onNavigate;
@@ -55,13 +54,14 @@ class _BerandaTabState extends State<BerandaTab> {
   }
 
   Widget _greetingCard() {
+    final s = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [kPrimaryDark, kPrimary],
+          colors: [Color.lerp(s.primary, Colors.black, 0.35)!, s.primary],
         ),
         borderRadius: BorderRadius.circular(20),
       ),
@@ -140,25 +140,26 @@ class _BerandaTabState extends State<BerandaTab> {
       );
     }
     final d = _dashboard!;
+    final s = Theme.of(context).colorScheme;
     return Row(
       children: [
         _statCard(
           icon: Icons.school,
-          color: kPrimary,
+          color: s.primary,
           label: 'Siswa',
           value: (d['total_siswa'] ?? 0).toString(),
         ),
         const SizedBox(width: 12),
         _statCard(
           icon: Icons.people_alt,
-          color: const Color(0xFF7C3AED),
+          color: s.secondary,
           label: 'Guru',
           value: (d['total_guru'] ?? 0).toString(),
         ),
         const SizedBox(width: 12),
         _statCard(
           icon: Icons.meeting_room,
-          color: const Color(0xFFF59E0B),
+          color: s.tertiary,
           label: 'Kelas',
           value: (d['total_kelas'] ?? 0).toString(),
         ),
@@ -167,7 +168,8 @@ class _BerandaTabState extends State<BerandaTab> {
   }
 
   Widget _sneakErrorCard(String message) {
-    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+    final s = Theme.of(context).colorScheme;
+    final muted = s.onSurfaceVariant;
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -184,7 +186,7 @@ class _BerandaTabState extends State<BerandaTab> {
                   style: TextStyle(color: muted, fontSize: 13),
                 ),
               ),
-              const Icon(Icons.refresh, color: kPrimary, size: 20),
+              Icon(Icons.refresh, color: s.primary, size: 20),
             ],
           ),
         ),
@@ -241,6 +243,7 @@ class _BerandaTabState extends State<BerandaTab> {
   }
 
   Widget _menuTile(_MenuItem m) {
+    final s = Theme.of(context).colorScheme;
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -253,10 +256,10 @@ class _BerandaTabState extends State<BerandaTab> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: kPrimary.withValues(alpha: 0.1),
+                  color: s.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(m.icon, color: kPrimary, size: 24),
+                child: Icon(m.icon, color: s.primary, size: 24),
               ),
               const SizedBox(height: 8),
               Text(m.label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
