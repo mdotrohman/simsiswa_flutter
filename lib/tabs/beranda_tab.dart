@@ -261,19 +261,17 @@ class _BerandaTabState extends State<BerandaTab> {
               ),
             ],
           ),
-          if (Session.alamat.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _heroTile(
-                  icon: Icons.home_outlined,
-                  label: 'Alamat Rumah',
-                  value: Session.alamat,
-                ),
-              ],
-            ),
-          ],
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _heroTile(
+                icon: Icons.home_outlined,
+                label: 'Alamat Rumah',
+                value: Session.alamat.isEmpty ? '-' : Session.alamat,
+              ),
+            ],
+          ),
         ],
       ),
     );
