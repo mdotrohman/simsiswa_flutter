@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -102,24 +100,6 @@ class _ProfilTabState extends State<ProfilTab> {
     return l.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
   }
 
-  bool get _selectedTabEmpty {
-    switch (_tab) {
-      case 1:
-        return _sekolah == null;
-      case 2:
-        return _ayah == null || !_ortuHasData(_ayah!);
-      case 3:
-        return _ibu == null || !_ortuHasData(_ibu!);
-      case 4:
-        return _wali == null || !_ortuHasData(_wali!);
-      case 5:
-        return _lampiran.isEmpty;
-      case 6:
-        return _riwayat.isEmpty;
-    }
-    return false;
-  }
-
   String _s(String key, [String fb = '']) {
     final v = _siswa?[key];
     if (v == null) return fb;
@@ -180,10 +160,6 @@ class _ProfilTabState extends State<ProfilTab> {
           const SizedBox(height: 14),
           if (_data == null && _error.isNotEmpty) ...[
             _buildErrorBanner(context),
-            const SizedBox(height: 14),
-          ],
-          if (_data != null && _tab > 0 && _selectedTabEmpty) ...[
-            _buildDiag(context),
             const SizedBox(height: 14),
           ],
           _buildTabBody(context),
@@ -1095,72 +1071,6 @@ class _ProfilTabState extends State<ProfilTab> {
             onPressed: _load,
             icon: const Icon(Icons.refresh),
             color: s.error,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDiag(BuildContext context) {
-    final s = Theme.of(context).colorScheme;
-    final buf = StringBuffer();
-    buf.writeln('API OK — semua tab data tergolong kosong.');
-    buf.writeln('data (objek respons) keys: ${_data!.keys.join(', ')}');
-    final o = _data!['orangtua'];
-    if (o is Map) {
-      buf.writeln('orangtua (map) keys: ${o.keys.join(', ')}');
-      o.forEach((k, v) {
-        buf.writeln('  $k => ${v.runtimeType}');
-        if (v is Map && v.isNotEmpty) {
-          buf.writeln('    keys: ${v.keys.join(', ')}');
-        }
-      });
-    } else if (o is List) {
-      buf.writeln('orangtua (list) len=${o.length}');
-      for (final e in o.whereType<Map>()) {
-        buf.writeln('  item keys: ${e.keys.join(', ')}');
-        buf.writeln('    jenis=${e['jenis']} nama=${e['nama']}');
-      }
-    } else {
-      buf.writeln('orangtua => ${o?.runtimeType}');
-    }
-    buf.writeln('sekolah_asal => ${_data!['sekolah_asal']?.runtimeType}');
-    buf.writeln('mutasi => ${_data!['mutasi']?.runtimeType}');
-    buf.writeln('lampiran => ${_data!['lampiran']?.runtimeType}');
-    buf.writeln('riwayat_kelas => ${_data!['riwayat_kelas']?.runtimeType}');
-    try {
-      final raw = jsonEncode(_data!);
-      buf.writeln('RAW ${raw.length} char:');
-      buf.write(raw.length > 1200 ? raw.substring(0, 1200) : raw);
-      if (raw.length > 1200) buf.write(' … (terpotong ${raw.length})');
-    } catch (e) {
-      buf.writeln('RAW error: $e');
-    }
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: s.tertiaryContainer.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: s.tertiary.withValues(alpha: 0.4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.bug_report_outlined, size: 20, color: s.tertiary),
-              const SizedBox(width: 8),
-              const Text('DIAGNOSTIK SKEMA API (v1.419)',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          SelectableText(
-            buf.toString(),
-            style: TextStyle(
-                fontSize: 11,
-                fontFamily: 'monospace',
-                color: s.onSurface),
           ),
         ],
       ),
