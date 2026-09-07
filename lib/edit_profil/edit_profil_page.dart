@@ -139,6 +139,10 @@ class _EditProfilPageState extends State<EditProfilPage> {
       siswaKeys.add(k);
     }
     _siswaC = {for (final k in siswaKeys) k: _c(_siswa, k)};
+    final alamatRaw = _asMap(_siswa)['alamat_raw'];
+    if (alamatRaw is String && alamatRaw.trim().isNotEmpty) {
+      _siswaC['alamat']!.text = alamatRaw.trim();
+    }
     _jk = _s(_siswa, 'jenis_kelamin', 'L');
 
     // ---- sekolah & mutasi
@@ -494,7 +498,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
           _field(c['cita_cita']!, 'Cita-cita'),
         ]),
         _section('Alamat', Icons.home_outlined, const Color(0xFF00897B), [
-          _field(c['alamat']!, 'Alamat Rumah', multiline: true),
+          _field(c['alamat']!, 'Alamat (Jalan / Dusun)', multiline: true),
           _two(_field(c['rt']!, 'RT'), _field(c['rw']!, 'RW')),
           _field(c['desa_kelurahan']!, 'Desa / Kelurahan'),
           _field(c['kecamatan']!, 'Kecamatan'),

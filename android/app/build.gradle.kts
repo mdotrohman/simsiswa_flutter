@@ -32,7 +32,7 @@ android {
         applicationId = "id.co.mtsbutambakberas.simsiswa_flutter"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = 427
+        versionCode = 428
         versionName = "1.427"
     }
 
