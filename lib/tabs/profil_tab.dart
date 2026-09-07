@@ -427,10 +427,6 @@ class _ProfilTabState extends State<ProfilTab> {
   Widget _tabChip(ColorScheme s, int i) {
     final active = i == _tab;
     final (icon, label) = _tabs[i];
-    final count = switch (i) {
-      5 => _lampiran.where((e) => (e['tersedia'] ?? false) == true).length,
-      _ => _riwayat.length,
-    };
     return Material(
       color: active
           ? s.primary
@@ -453,34 +449,13 @@ class _ProfilTabState extends State<ProfilTab> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, size: 16,
-                  color: active
-                      ? s.onPrimary
-                      : count > 0
-                          ? s.primary
-                          : s.onSurfaceVariant),
+                  color: active ? s.onPrimary : s.primary),
               const SizedBox(width: 6),
               Text(label,
                   style: TextStyle(
                       color: active ? s.onPrimary : s.onSurface,
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700)),
-              if (count > 0) ...[
-                const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: active
-                        ? Colors.white.withValues(alpha: 0.25)
-                        : s.primary.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text('$count',
-                      style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: active ? Colors.white : s.primary)),
-                ),
-              ],
             ],
           ),
         ),
