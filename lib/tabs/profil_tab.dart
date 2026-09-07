@@ -86,14 +86,21 @@ class _ProfilTabState extends State<ProfilTab> {
     return l.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
   }
 
-  bool get _hasApiData =>
-      _sekolah != null ||
-      _mutasi != null ||
-      _ayah != null ||
-      _ibu != null ||
-      _wali != null ||
-      _lampiran.isNotEmpty ||
-      _riwayat.isNotEmpty;
+  bool get _selectedTabEmpty {
+    switch (_tab) {
+      case 1:
+        return _sekolah == null;
+      case 2:
+        return _ayah == null || !_ortuHasData(_ayah!);
+      case 3:
+        return _ibu == null || !_ortuHasData(_ibu!);
+      case 4:
+        return _wali == null || !_ortuHasData(_wali!);
+      case 5:
+        return _lampiran.isEmpty;
+    }
+    return false;
+  }
 
   String _s(String key, [String fb = '']) {
     final v = _siswa?[key];
@@ -157,7 +164,7 @@ class _ProfilTabState extends State<ProfilTab> {
             _buildErrorBanner(context),
             const SizedBox(height: 14),
           ],
-          if (_data != null && !_hasApiData) ...[
+          if (_data != null && _tab > 0 && _selectedTabEmpty) ...[
             _buildDiag(context),
             const SizedBox(height: 14),
           ],
