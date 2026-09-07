@@ -25,6 +25,7 @@ class _ProfilTabState extends State<ProfilTab> {
   Map<String, dynamic>? _data;
   int _tab = 0;
   bool _loaded = false;
+  String _error = '';
 
   @override
   void initState() {
@@ -33,7 +34,10 @@ class _ProfilTabState extends State<ProfilTab> {
   }
 
   Future<void> _load() async {
-    setState(() => _loaded = false);
+    setState(() {
+      _loaded = false;
+      _error = '';
+    });
     try {
       final data = await Api.profil();
       if (!mounted) return;
@@ -41,9 +45,12 @@ class _ProfilTabState extends State<ProfilTab> {
         _data = data;
         _loaded = true;
       });
-    } catch (_) {
+    } on Exception catch (e) {
       if (!mounted) return;
-      setState(() => _loaded = true);
+      setState(() {
+        _loaded = true;
+        _error = e.toString();
+      });
     }
   }
 
@@ -135,6 +142,10 @@ class _ProfilTabState extends State<ProfilTab> {
           const SizedBox(height: 14),
           _buildTabBar(context),
           const SizedBox(height: 14),
+          if (_data == null && _error.isNotEmpty) ...[
+            _buildErrorBanner(context),
+            const SizedBox(height: 14),
+          ],
           _buildTabBody(context),
           const SizedBox(height: 16),
           _buildAccount(context),
@@ -760,9 +771,13 @@ class _ProfilTabState extends State<ProfilTab> {
       'ibu' => 'Ibu',
       _ => 'Wali',
     };
-    if (p == null) {
-      return _emptyCard(s, Icons.person_off_outlined,
-          'Data $label belum dicatat.', 'Lengkapi data $label pada bagian PPDB.');
+    if (p == null || !_ortuHasData(p)) {
+      return _emptyCard(
+        s,
+        Icons.person_off_outlined,
+        'Data $label belum tercatat di sistem.',
+        'Siswa ini berstatus aktif. Hubungi operator madrasah untuk melengkapi data $label.',
+      );
     }
     return _buildSection(
       context,
@@ -920,6 +935,57 @@ class _ProfilTabState extends State<ProfilTab> {
         );
       }
     }
+  }
+
+  // ----------------------------------------------------------------- bantu
+  bool _ortuHasData(Map<String, dynamic> p) {
+    const keys = {
+      'nama', 'nik', 'status_hidup', 'tempat_lahir', 'tanggal_lahir',
+      'pendidikan', 'pekerjaan', 'penghasilan', 'telepon', 'alamat',
+      'hubungan',
+    };
+    return keys.any((k) {
+      final v = p[k];
+      return v != null && v.toString().trim().isNotEmpty;
+    });
+  }
+
+  Widget _buildErrorBanner(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: s.error.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: s.error.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.error_outline, size: 20, color: s.error),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Gagal memuat profil dari server',
+                    style:
+                        TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 2),
+                Text(_error,
+                    style: TextStyle(
+                        fontSize: 12, color: s.onSurfaceVariant)),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: _load,
+            icon: const Icon(Icons.refresh),
+            color: s.error,
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _emptyCard(
