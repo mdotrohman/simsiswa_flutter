@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/api.dart';
 import '../core/session.dart';
+import '../settings/settings_page.dart';
 
 class BerandaTab extends StatefulWidget {
   final void Function(int index) onNavigate;
@@ -369,6 +370,7 @@ class _BerandaTabState extends State<BerandaTab> {
       _MenuItem(Icons.event_available_outlined, 'Absensi', Colors.indigo, () => widget.onNavigate(3)),
       _MenuItem(Icons.campaign_outlined, 'Pengumuman', Colors.orange, () => widget.onNavigate(4)),
       _MenuItem(Icons.person_outline, 'Profil', Colors.blue, () => widget.onNavigate(1)),
+      _MenuItem(Icons.settings_outlined, 'Pengaturan', Colors.blueGrey, _openSettings),
       _MenuItem(Icons.assignment_outlined, 'Tugas', Colors.purple, _sample),
       _MenuItem(Icons.schedule_rounded, 'Jadwal', Colors.teal, _sample),
       _MenuItem(Icons.book_outlined, 'E-Library', Colors.brown, _sample),
@@ -395,6 +397,16 @@ class _BerandaTabState extends State<BerandaTab> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Fitur ini sedang disiapkan'), behavior: SnackBarBehavior.floating),
     );
+  }
+
+  void _openSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SettingsPage()),
+    );
+  }
+
+  void _openPage(Widget page) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
   }
 
   Widget _menuTile(_MenuItem m) {
@@ -553,9 +565,24 @@ class _BerandaTabState extends State<BerandaTab> {
   Widget _featuresCard() {
     final s = Theme.of(context).colorScheme;
     final features = [
-      (Icons.notifications_active_outlined, 'Ganti Notifikasi', Colors.redAccent),
-      (Icons.palette_outlined, 'Tema', Colors.purple),
-      (Icons.security_outlined, 'Privasi & Keamanan', s.primary),
+      (
+        Icons.notifications_active_outlined,
+        'Ganti Notifikasi',
+        Colors.redAccent,
+        () => _openPage(const NotificationPage()),
+      ),
+      (
+        Icons.palette_outlined,
+        'Tema',
+        Colors.purple,
+        () => _openPage(const ThemeModePage()),
+      ),
+      (
+        Icons.settings_outlined,
+        'Pengaturan',
+        s.primary,
+        _openSettings,
+      ),
     ];
     return _sectionCard(
       s,
@@ -565,19 +592,21 @@ class _BerandaTabState extends State<BerandaTab> {
         children: [
           for (var i = 0; i < features.length; i++) ...[
             if (i > 0) _divider(s),
-            _featureTile(s, features[i].$1, features[i].$2, features[i].$3),
+            _featureTile(s, features[i].$1, features[i].$2, features[i].$3,
+                features[i].$4),
           ],
         ],
       ),
     );
   }
 
-  Widget _featureTile(ColorScheme s, IconData icon, String label, Color color) {
+  Widget _featureTile(ColorScheme s, IconData icon, String label, Color color,
+      VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: _sample,
+        onTap: onTap,
         child: Row(
           children: [
             Icon(icon, color: color, size: 22),
@@ -696,6 +725,7 @@ class _BerandaTabState extends State<BerandaTab> {
         _MenuGroup('Informasi & Lainnya', Icons.apps_outlined, Colors.orange, [
           _MenuItem(Icons.campaign_outlined, 'Pengumuman', Colors.orange, () => widget.onNavigate(4)),
           _MenuItem(Icons.person_outline, 'Profil', Colors.blue, () => widget.onNavigate(1)),
+          _MenuItem(Icons.settings_outlined, 'Pengaturan', Colors.blueGrey, _openSettings),
           _MenuItem(Icons.event_note_outlined, 'Agenda Kegiatan', Colors.pink, _sample),
           _MenuItem(Icons.newspaper_outlined, 'Berita Madrasah', Colors.blueGrey, _sample),
           _MenuItem(Icons.emoji_events_outlined, 'Prestasi', Colors.amber, _sample),

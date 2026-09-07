@@ -31,17 +31,22 @@ class SimSiswaApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // Warna adaptif wallpaper (Material You / Android 12+; di Android 16
     // mengikuti wallpaper). Saat tak tersedia, fallback seed emerald.
-    return DynamicColorBuilder(
-      builder: (lightDynamic, darkDynamic) {
-        return MaterialApp(
-          title: 'SIM Siswa MTsBU',
-          debugShowCheckedModeBanner: false,
-          theme: buildAppTheme(Brightness.light, dynamicScheme: lightDynamic),
-          darkTheme: buildAppTheme(Brightness.dark, dynamicScheme: darkDynamic),
-          themeMode: ThemeMode.system,
-          home: const _Home(),
-        );
-      },
+    // Rebuild saat sesi/preferensi berubah (termasuk mode tema) agar
+    // MaterialApp ikut berganti themeMode.
+    return ValueListenableBuilder<int>(
+      valueListenable: Session.revision,
+      builder: (context, _, __) => DynamicColorBuilder(
+        builder: (lightDynamic, darkDynamic) {
+          return MaterialApp(
+            title: 'SIM Siswa MTsBU',
+            debugShowCheckedModeBanner: false,
+            theme: buildAppTheme(Brightness.light, dynamicScheme: lightDynamic),
+            darkTheme: buildAppTheme(Brightness.dark, dynamicScheme: darkDynamic),
+            themeMode: Session.themeMode,
+            home: const _Home(),
+          );
+        },
+      ),
     );
   }
 }

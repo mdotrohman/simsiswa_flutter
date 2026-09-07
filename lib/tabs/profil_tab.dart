@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../auth/login_page.dart';
 import '../core/api.dart';
 import '../core/session.dart';
 
@@ -22,6 +21,7 @@ class _ProfilTabState extends State<ProfilTab> {
     (Icons.woman_outlined, 'Ibu'),
     (Icons.verified_user_outlined, 'Wali'),
     (Icons.folder_outlined, 'Lampiran'),
+    (Icons.history_edu_outlined, 'Riwayat'),
   ];
 
   Map<String, dynamic>? _data;
@@ -114,6 +114,8 @@ class _ProfilTabState extends State<ProfilTab> {
         return _wali == null || !_ortuHasData(_wali!);
       case 5:
         return _lampiran.isEmpty;
+      case 6:
+        return _riwayat.isEmpty;
     }
     return false;
   }
@@ -185,10 +187,6 @@ class _ProfilTabState extends State<ProfilTab> {
             const SizedBox(height: 14),
           ],
           _buildTabBody(context),
-          const SizedBox(height: 16),
-          _buildAccount(context),
-          const SizedBox(height: 16),
-          _buildLogout(context),
           const SizedBox(height: 8),
         ],
       ),
@@ -431,7 +429,8 @@ class _ProfilTabState extends State<ProfilTab> {
       2 => _ayah == null ? 0 : 1,
       3 => _ibu == null ? 0 : 1,
       4 => _wali == null ? 0 : 1,
-      _ => _lampiran.where((e) => (e['tersedia'] ?? false) == true).length,
+      5 => _lampiran.where((e) => (e['tersedia'] ?? false) == true).length,
+      _ => _riwayat.length,
     };
     return Material(
       color: active
@@ -498,7 +497,8 @@ class _ProfilTabState extends State<ProfilTab> {
       2 => _buildOrtuTab(context, 'ayah', _ayah),
       3 => _buildOrtuTab(context, 'ibu', _ibu),
       4 => _buildOrtuTab(context, 'wali', _wali),
-      _ => _buildLampiranTab(context),
+      5 => _buildLampiranTab(context),
+      _ => _buildRiwayatTab(context),
     };
   }
 
@@ -607,11 +607,19 @@ class _ProfilTabState extends State<ProfilTab> {
             (Icons.volunteer_activism_outlined, 'PKH', _s('pkh')),
           ],
         ),
-        if (_riwayat.isNotEmpty) ...[
-          const SizedBox(height: 14),
-          _buildRiwayat(context),
-        ],
       ],
+    );
+  }
+
+  Widget _buildRiwayatTab(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    if (_riwayat.isEmpty) {
+      return _emptyCard(s, Icons.history_edu_outlined,
+          'Belum ada riwayat kelas.', 'Perjalanan kelas siswa akan tampil di sini.');
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [_buildRiwayat(context)],
     );
   }
 
@@ -1295,100 +1303,6 @@ class _ProfilTabState extends State<ProfilTab> {
         thickness: 0.7,
         color: s.outlineVariant.withValues(alpha: 0.35),
       );
-
-  // ------------------------------------------------------------------ akun
-  Widget _buildAccount(BuildContext context) {
-    final s = Theme.of(context).colorScheme;
-    final rows = <(IconData, String, String)>[
-      (Icons.alternate_email, 'Username', Session.username),
-      (Icons.badge_outlined, 'Peran', _roleLabel),
-      (Icons.family_restroom_outlined, 'Wali', Session.waliNama.trim()),
-    ];
-    final tiles = <Widget>[];
-    for (final (ic, label, value) in rows) {
-      if (value.trim().isEmpty) continue;
-      if (tiles.isNotEmpty) tiles.add(_divider(s));
-      tiles.add(_infoTile(ic, label, value, s.primary));
-    }
-    if (tiles.isEmpty) return const SizedBox.shrink();
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: s.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: s.outlineVariant.withValues(alpha: 0.4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: s.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                child: Icon(Icons.manage_accounts_outlined,
-                    size: 19, color: s.primary),
-              ),
-              const SizedBox(width: 10),
-              Text('Akun',
-                  style:
-                      const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ...tiles,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLogout(BuildContext context) {
-    final s = Theme.of(context).colorScheme;
-    return SafeArea(
-      top: false,
-      child: OutlinedButton.icon(
-        onPressed: () => showDialog<void>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            icon: Icon(Icons.logout, color: s.error),
-            title: const Text('Keluar?'),
-            content: const Text('Anda yakin ingin keluar dari akun ini?'),
-            actions: [
-              TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: const Text('Batal')),
-              FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: s.error),
-                onPressed: () async {
-                  final nav = Navigator.of(context);
-                  Navigator.of(ctx).pop();
-                  await Session.logout();
-                  if (!mounted) return;
-                  nav.pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const LoginPage()),
-                    (route) => false,
-                  );
-                },
-                child: const Text('Keluar'),
-              ),
-            ],
-          ),
-        ),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: s.error,
-          side: BorderSide(color: s.error.withValues(alpha: 0.5)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-        ),
-        icon: const Icon(Icons.logout, size: 18),
-        label: const Text('Keluar dari Aplikasi'),
-      ),
-    );
-  }
 
   Widget _buildSkeleton() {
     final s = Theme.of(context).colorScheme;

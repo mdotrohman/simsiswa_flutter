@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Session {
@@ -29,6 +30,19 @@ class Session {
   static String get themeModePref => _str('theme_mode');
   static Future<void> setThemeModePref(String value) async {
     await _prefs.setString('theme_mode', value);
+    _bump();
+  }
+
+  static ThemeMode get themeMode => switch (_str('theme_mode')) {
+        'l' => ThemeMode.light,
+        'd' => ThemeMode.dark,
+        _ => ThemeMode.system,
+      };
+
+  /// Preferensi notifikasi push (default aktif).
+  static bool get notifEnabled => _has('notif_enabled', d: true);
+  static Future<void> setNotifEnabled(bool value) async {
+    await _prefs.setBool('notif_enabled', value);
     _bump();
   }
 
