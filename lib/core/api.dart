@@ -159,4 +159,19 @@ class Api {
       'token_hp': token,
     });
   }
+
+  /// Simpan perubahan data siswa (POST app/api/apk/siswa/update_siswa).
+  /// [fields] harus berisi kolom tabel `siswa` (sama persis dengan data
+  /// `siswa` pada GET app/api/apk/profil_siswa). Mengembalikan pesan server.
+  static Future<String> updateSiswa(Map<String, dynamic> fields) async {
+    final json = await _send('POST', 'app/api/apk/siswa/update_siswa', body: {
+      'siswa_id': Session.userId,
+      'data': fields,
+    });
+    if (json['success'] == true) {
+      return json['message']?.toString() ?? 'Data siswa berhasil disimpan.';
+    }
+    throw ApiException(
+        200, json['message']?.toString() ?? 'Gagal menyimpan data siswa.');
+  }
 }

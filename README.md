@@ -20,9 +20,17 @@ lama untuk siswa & wali. Satu codebase Flutter.
   `POST app/api/apk/siswa/profil` saat login dengan fallback ke data login; kolom
   tetap tampil dengan "-" bila datanya belum tersedia). Menu layanan disusun sebagai
   kotak (card) berisi grid navigasi 5 kolom dengan ikon warna besar, tombol badge
-  **Menu lainnya** di ujung kanan judul membuka **17 menu** dalam grup
+  **Menu lainnya** di ujung kanan judul membuka menu dalam grup
   expand/collapse (Pembelajaran, Keuangan, Kehadiran, Informasi). Di bawahnya:
-  Aktivitas Terakhir, Pengumuman, Lainnya (notifikasi/tema/privasi), dan Keluar.
+  Aktivitas Terakhir, Pengumuman, Lainnya (notifikasi/tema/pengaturan — semuanya
+  kini membuka halaman sungguhan), dan Keluar.
+- **Profil siswa (tab)**: tab Siswa / Sekolah / Ayah / Ibu / Wali / Lampiran /
+  Riwayat. Tab yang datanya kosong tampil ramah ("belum dicatat") tanpa kartu
+  diagnostik. Tombol **Edit** di header membuka halaman edit profil siswa
+  (`lib/edit_profil/edit_profil_page.dart`) berisi form lengkap sesuai kolom
+  tabel akhir (Siswa): Data Pribadi, Dokumen & Kontak, Fisik & Kesehatan,
+  Pendidikan, Asrama, Alamat, dan Lain-lain. Simpan mengirim
+  `POST app/api/apk/siswa/update_siswa` (lihat "Kontrak").
 - **Tema Material You**: seluruh pewarnaan (background, appbar, nav, kartu, login)
   mengikuti color scheme wallpaper Android; fallback ke seed emerald brand bila
   dynamic color tak tersedia.
@@ -39,6 +47,17 @@ lama untuk siswa & wali. Satu codebase Flutter.
 - Kontrak profil siswa: `POST app/api/apk/siswa/profil` dengan JSON `{siswa_id}` →
   `data.siswa` (nis, nisn, nama_lengkap, status, tempat_lahir, tanggal_lahir, alamat
   lengkap, dst.). Dipakai hero beranda; jatuh ke data login bila belum tersedia.
+- Kontrak profil lengkap: `GET app/api/apk/profil_siswa` (token dari sesi) →
+  `data` berisi `siswa`, `sekolah_asal`, `mutasi`, `orangtua` (ayah/ibu/wali),
+  `lampiran`, `riwayat_kelas`.
+- Kontrak edit profil (sama persis dengan kolom tabel `siswa`, mis. nama_lengkap,
+  jenis_kelamin, tempat_lahir, tanggal_lahir, alamat, dst.):
+  `POST app/api/apk/siswa/update_siswa` dengan JSON `{siswa_id, data}` → `success`
+  boolean; app menampilkan pesan dari `message`.
+- **Pengaturan** (`lib/settings/settings_page.dart`): hub aplikasi berisi sub-halaman
+  Akun (data & logout), Tema (Sistem/Terang/Gelap — disimpan di preferensi & dipakai
+  `MaterialApp.themeMode`), Notifikasi (toggle + register token FCM), Privasi
+  (hapus data lokal), dan Tentang.
 - Nomor versi memakai 3 digit belakang (mis. `v1.411`), naik satu per build.
 
 ## Cara Build (rekomendasi dari pengalaman nyata)
@@ -126,11 +145,15 @@ armeabi-v7a; x86_64 dipisah untuk emulator) — sertifikat resmi SHA-256
   (kotak navigasi 5 kolom + badge "Menu lainnya" 17 menu expand/collapse),
   aktivitas, pengumuman, dan keluar.
 - `lib/tabs/profil_tab.dart` — profil lengkap siswa (gaya tab premium): tab
-  Siswa / Sekolah / Ayah / Ibu / Wali / Lampiran. Data dari
+  Siswa / Sekolah / Ayah / Ibu / Wali / Lampiran / Riwayat. Data dari
   `GET app/api/apk/profil_siswa` (token dari sesi; siswa_id dari guard server).
-  Berisi hero gradien, Data Pribadi, Alamat, Pendidikan + Riwayat Kelas
-  (timeline), Kesehatan, Kontak & Dokumen, Sekolah Asal & Mutasi, orang tua/wali,
-  grid lampiran dokumen (buka file via url_launcher), pull-to-refresh.
+  Berisi hero gradien dengan tombol Edit, Data Pribadi, Alamat, Pendidikan +
+  Riwayat Kelas (timeline), Kesehatan, Kontak & Dokumen, Sekolah Asal & Mutasi,
+  orang tua/wali, grid lampiran dokumen (buka file via url_launcher),
+  pull-to-refresh.
+- `lib/edit_profil/edit_profil_page.dart` — form edit profil siswa (semua kolom
+  tabel `siswa`), kirim `POST app/api/apk/siswa/update_siswa`, reload otomatis
+  saat kembali ke tab Profil.
 - `lib/tabs/pengumuman_tab.dart` — pengumuman madrasah dari
   `POST app/api/apk/siswa/pengumuman` (aksi `list`/`detail`): kartu prioritas
   (Urgent/Penting/Biasa), pratinjau isi, tanggal Indonesia, pembuat, lampiran,
@@ -160,6 +183,8 @@ aman), tapi tidak bisa menerima push.
 - `lib/models/login.dart`, `lib/models/profil.dart` — model kontrak API (login & profil publik).
 - `lib/core/credential_store.dart` — sandi tersimpan terenkripsi (Keystore/Keychain).
 - `lib/core/theme.dart` — tema Material You (color scheme adaptif + fallback brand).
+- `lib/settings/settings_page.dart` — halaman Pengaturan (Akun, Tema, Notifikasi,
+  Privasi, Tentang) beserta sub-halamannya.
 - `docs/build-arm64.md` — resep lengkap build arm64 (termasuk injeksi lib).
 
 ## Testing

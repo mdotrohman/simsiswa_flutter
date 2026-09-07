@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../core/api.dart';
 import '../core/session.dart';
+import '../edit_profil/edit_profil_page.dart';
 
 class ProfilTab extends StatefulWidget {
   const ProfilTab({super.key});
@@ -259,6 +260,8 @@ class _ProfilTabState extends State<ProfilTab> {
                   ],
                 ),
               ),
+              const SizedBox(width: 4),
+              _editButton(),
             ],
           ),
           const SizedBox(height: 14),
@@ -312,6 +315,31 @@ class _ProfilTabState extends State<ProfilTab> {
     if (n.isEmpty) return nn;
     if (nn.isEmpty) return n;
     return '$n / $nn';
+  }
+
+  Widget _editButton() {
+    return Material(
+      color: Colors.white.withValues(alpha: 0.16),
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: _openEdit,
+        child: const Padding(
+          padding: EdgeInsets.all(8),
+          child: Icon(Icons.edit_outlined,
+              size: 20, color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openEdit() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => EditProfilPage(data: _data),
+      ),
+    );
+    _load();
   }
 
   Widget _identityBadge() {
@@ -400,11 +428,6 @@ class _ProfilTabState extends State<ProfilTab> {
     final active = i == _tab;
     final (icon, label) = _tabs[i];
     final count = switch (i) {
-      0 => _siswa == null ? 0 : 1,
-      1 => (_sekolah != null ? 1 : 0) + (_mutasi != null ? 1 : 0),
-      2 => _ayah == null ? 0 : 1,
-      3 => _ibu == null ? 0 : 1,
-      4 => _wali == null ? 0 : 1,
       5 => _lampiran.where((e) => (e['tersedia'] ?? false) == true).length,
       _ => _riwayat.length,
     };
