@@ -125,9 +125,12 @@ armeabi-v7a; x86_64 dipisah untuk emulator) — sertifikat resmi SHA-256
 - `lib/tabs/beranda_tab.dart` — beranda premium: hero profil siswa, menu layanan
   (kotak navigasi 5 kolom + badge "Menu lainnya" 17 menu expand/collapse),
   aktivitas, pengumuman, dan keluar.
-- `lib/tabs/profil_tab.dart` — profil lengkap siswa: hero gradien (foto/inisial,
-  status) + kartu Data Pribadi, Alamat, Pendidikan, Orang Tua/Wali, dan Akun;
-  data dari `POST app/api/apk/siswa/profil`, pull-to-refresh, skeleton loading.
+- `lib/tabs/profil_tab.dart` — profil lengkap siswa (gaya tab premium): tab
+  Siswa / Sekolah / Ayah / Ibu / Wali / Lampiran. Data dari
+  `GET app/api/apk/profil_siswa` (token dari sesi; siswa_id dari guard server).
+  Berisi hero gradien, Data Pribadi, Alamat, Pendidikan + Riwayat Kelas
+  (timeline), Kesehatan, Kontak & Dokumen, Sekolah Asal & Mutasi, orang tua/wali,
+  grid lampiran dokumen (buka file via url_launcher), pull-to-refresh.
 - `lib/tabs/pengumuman_tab.dart` — pengumuman madrasah dari
   `POST app/api/apk/siswa/pengumuman` (aksi `list`/`detail`): kartu prioritas
   (Urgent/Penting/Biasa), pratinjau isi, tanggal Indonesia, pembuat, lampiran,
