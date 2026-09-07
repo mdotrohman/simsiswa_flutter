@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 
+import 'core/fcm.dart';
 import 'core/session.dart';
 import 'core/theme.dart';
 import 'index/index_page.dart';
@@ -11,6 +12,7 @@ import 'shell/main_shell.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   unawaited(initSession());
+  unawaited(initFcm());
   runApp(const SimSiswaApp());
 }
 

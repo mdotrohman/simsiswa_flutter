@@ -2,6 +2,8 @@ plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // Membaca google-services.json untuk Firebase (FCM).
+    id("com.google.gms.google-services")
 }
 
 import java.util.Properties
@@ -22,14 +24,16 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Diperlukan flutter_local_notifications (java.time di perangkat lama).
+        isCoreLibraryDesugaringEnabled = true
     }
 
     defaultConfig {
         applicationId = "id.co.mtsbutambakberas.simsiswa_flutter"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = 415
-        versionName = "1.415"
+        versionCode = 416
+        versionName = "1.416"
     }
 
     signingConfigs {
@@ -73,4 +77,6 @@ dependencies {
     // saat R8 di release; sertakan agar shrinker tidak gagal.
     implementation("com.google.code.findbugs:jsr305:3.0.2")
     implementation("com.google.errorprone:error_prone_annotations:2.30.0")
+    // Desugaring untuk flutter_local_notifications.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

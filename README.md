@@ -132,6 +132,27 @@ armeabi-v7a; x86_64 dipisah untuk emulator) — sertifikat resmi SHA-256
   `POST app/api/apk/siswa/pengumuman` (aksi `list`/`detail`): kartu prioritas
   (Urgent/Penting/Biasa), pratinjau isi, tanggal Indonesia, pembuat, lampiran,
   paginasi "Muat lebih banyak", pull-to-refresh, detail halaman terpisah.
+- `lib/core/fcm.dart` — notifikasi push FCM: inisialisasi Firebase, izin
+  Android 13+, channel & banner lokal (flutter_local_notifications) saat app
+  terbuka, registrasi token ke server (`POST app/api/apk/siswa/fcm_token`),
+  tap notifikasi → buka detail pengumuman.
+
+## Notifikasi push (FCM)
+
+**Server** menyediakan `app/api/apk/siswa/pengumuman.php` (aksi `send_notif`,
+`cron_send`, auto-kirim) + `fcm_helper.php` + `firebase-service-account.json`.
+
+**App Android** butuh konfigurasi project Firebase dari Firebase console
+`sim-mts-bu-tambakberas`:
+1. `android/app/google-services.json` — **wajib diisi nilai asli**
+   (project_number, mobilesdk_app_id, api_key). File saat ini masih template:
+   `GANTI_PROJECT_NUMBER`, `GANTI_MOBILE_SDK_APP_ID`, `GANTI_API_KEY`.
+2. Server perlu endpoint `POST app/api/apk/siswa/fcm_token`
+   (`{aksi:'simpan', siswa_id, token_hp}`) agar token HP tersimpan di tabel
+   `notifikasi_hp` yang dibaca `kirimFCM()`.
+
+Tanpa google-services.json asli, aplikasi tetap normal (FCM init ditangkap
+aman), tapi tidak bisa menerima push.
 - `lib/core/api.dart`, `lib/core/session.dart` — klien API & sesi.
 - `lib/models/login.dart`, `lib/models/profil.dart` — model kontrak API (login & profil publik).
 - `lib/core/credential_store.dart` — sandi tersimpan terenkripsi (Keystore/Keychain).

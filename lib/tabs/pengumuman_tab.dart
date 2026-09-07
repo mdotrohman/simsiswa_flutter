@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/api.dart';
+import '../core/app_nav.dart';
 
 class PengumumanTab extends StatefulWidget {
   const PengumumanTab({super.key});
@@ -22,6 +23,27 @@ class _PengumumanTabState extends State<PengumumanTab> {
   void initState() {
     super.initState();
     _load(reset: true);
+    AppNav.openPengumuman.addListener(_onOpenPengumuman);
+    _onOpenPengumuman();
+  }
+
+  @override
+  void dispose() {
+    AppNav.openPengumuman.removeListener(_onOpenPengumuman);
+    super.dispose();
+  }
+
+  void _onOpenPengumuman() {
+    final id = AppNav.openPengumuman.value;
+    if (id <= 0) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => _PengumumanDetailPage(id: id),
+        ),
+      );
+    });
   }
 
   Future<void> _load({bool reset = false}) async {

@@ -149,4 +149,14 @@ class Api {
     }
     return detail as Map<String, dynamic>;
   }
+
+  /// Daftarkan/mutakhirkan token notifikasi HP milik siswa
+  /// (POST app/api/apk/siswa/fcm_token). Best-effort; error diabaikan pemanggil.
+  static Future<void> registerFcmToken(String token) async {
+    await _send('POST', 'app/api/apk/siswa/fcm_token', body: {
+      'aksi': 'simpan',
+      'siswa_id': Session.userId,
+      'token_hp': token,
+    });
+  }
 }

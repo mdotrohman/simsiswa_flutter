@@ -42,6 +42,7 @@ class Session {
   static String get waliNama => _str('wali_nama');
   static String get status => _str('status');
   static String get kelas => _str('kelas');
+  static String get deviceToken => _str('device_token');
   static String get tempatLahir => _str('tempat_lahir');
   static String get tanggalLahir => _str('tanggal_lahir');
   static String get alamat => _str('alamat');
@@ -96,5 +97,10 @@ class Session {
   static Future<void> logout() async {
     await _prefs.clear();
     _bump();
+  }
+
+  static Future<void> saveDeviceToken(String token) async {
+    if (!_ready) return;
+    await _prefs.setString('device_token', token);
   }
 }

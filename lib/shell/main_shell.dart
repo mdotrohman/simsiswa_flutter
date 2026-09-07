@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../core/app_nav.dart';
+import '../core/fcm.dart';
 import '../tabs/absensi_tab.dart';
 import '../tabs/beranda_tab.dart';
 import '../tabs/pembayaran_tab.dart';
@@ -30,6 +32,26 @@ class _MainShellState extends State<MainShell> {
     'Pengumuman',
     'Menu',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _index = AppNav.tabIndex.value;
+    AppNav.tabIndex.addListener(_onAppNav);
+    registerSavedToken();
+  }
+
+  @override
+  void dispose() {
+    AppNav.tabIndex.removeListener(_onAppNav);
+    super.dispose();
+  }
+
+  void _onAppNav() {
+    if (mounted && _index != AppNav.tabIndex.value) {
+      setState(() => _index = AppNav.tabIndex.value);
+    }
+  }
 
   static const _menuItems = [
     'Beranda',
