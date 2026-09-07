@@ -161,12 +161,13 @@ class Api {
   }
 
   /// Simpan perubahan data siswa (POST app/api/apk/siswa/update_siswa).
-  /// [fields] harus berisi kolom tabel `siswa` (sama persis dengan data
-  /// `siswa` pada GET app/api/apk/profil_siswa). Mengembalikan pesan server.
-  static Future<String> updateSiswa(Map<String, dynamic> fields) async {
+  /// [data] adalah seluruh objek `data` dari GET app/api/apk/profil_siswa
+  /// (siswa, sekolah_asal, mutasi, orangtua, lampiran, riwayat_kelas) setelah
+  /// diedit. Mengembalikan pesan server.
+  static Future<String> updateSiswa(Map<String, dynamic> data) async {
     final json = await _send('POST', 'app/api/apk/siswa/update_siswa', body: {
       'siswa_id': Session.userId,
-      'data': fields,
+      'data': data,
     });
     if (json['success'] == true) {
       return json['message']?.toString() ?? 'Data siswa berhasil disimpan.';
