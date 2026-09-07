@@ -160,12 +160,16 @@ class Api {
     });
   }
 
-  /// Simpan perubahan data siswa (POST app/api/apk/siswa/update_siswa).
-  /// [data] adalah seluruh objek `data` dari GET app/api/apk/profil_siswa
+  /// Simpan perubahan data siswa — memakai endpoint `profil_siswa.php` yang
+  /// sudah ada (tidak perlu file baru). Baca: GET app/api/apk/profil_siswa.
+  /// Simpan: POST app/api/apk/profil_siswa dengan `{aksi:'update', siswa_id,
+  /// data}` — [data] berisi seluruh objek `data` dari GET profil_siswa
   /// (siswa, sekolah_asal, mutasi, orangtua, lampiran, riwayat_kelas) setelah
   /// diedit. Mengembalikan pesan server.
   static Future<String> updateSiswa(Map<String, dynamic> data) async {
-    final json = await _send('POST', 'app/api/apk/siswa/update_siswa', body: {
+    final json =
+        await _send('POST', 'app/api/apk/profil_siswa', body: {
+      'aksi': 'update',
       'siswa_id': Session.userId,
       'data': data,
     });

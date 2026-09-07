@@ -8,7 +8,8 @@ import '../core/api.dart';
 /// tab Siswa / Sekolah / Ayah / Ibu / Wali / Lampiran / Riwayat, dengan
 /// section dan urutan field yang sama. Simpan mengirim seluruh objek `data`
 /// (siswa, sekolah_asal, mutasi, orangtua, lampiran, riwayat_kelas) ke
-/// POST app/api/apk/siswa/update_siswa.
+/// POST app/api/apk/profil_siswa (aksi `update`) — endpoint yang sama dengan
+/// pembacaan profil, tidak perlu file server baru.
 class EditProfilPage extends StatefulWidget {
   const EditProfilPage({super.key, this.data});
 

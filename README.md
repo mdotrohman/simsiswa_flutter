@@ -30,7 +30,7 @@ lama untuk siswa & wali. Satu codebase Flutter.
   (`lib/edit_profil/edit_profil_page.dart`) berisi form lengkap sesuai kolom
   tabel akhir (Siswa): Data Pribadi, Dokumen & Kontak, Fisik & Kesehatan,
   Pendidikan, Asrama, Alamat, dan Lain-lain. Simpan mengirim
-  `POST app/api/apk/siswa/update_siswa` (lihat "Kontrak").
+  `POST app/api/apk/profil_siswa` dengan aksi `update` (lihat "Kontrak").
 - **Tema Material You**: seluruh pewarnaan (background, appbar, nav, kartu, login)
   mengikuti color scheme wallpaper Android; fallback ke seed emerald brand bila
   dynamic color tak tersedia.
@@ -51,9 +51,10 @@ lama untuk siswa & wali. Satu codebase Flutter.
   `data` berisi `siswa`, `sekolah_asal`, `mutasi`, `orangtua` (ayah/ibu/wali),
   `lampiran`, `riwayat_kelas`.
 - Kontrak edit profil (sama persis dengan kolom tabel `siswa`, mis. nama_lengkap,
-  jenis_kelamin, tempat_lahir, tanggal_lahir, alamat, dst.):
-  `POST app/api/apk/siswa/update_siswa` dengan JSON `{siswa_id, data}` → `success`
-  boolean; app menampilkan pesan dari `message`.
+  jenis_kelamin, tempat_lahir, tanggal_lahir, alamat, dst.): **dipakai endpoint
+  `profil_siswa` yang sudah ada** — baca `GET`, simpan `POST app/api/apk/profil_siswa`
+  dengan JSON `{aksi:'update', siswa_id, data}` → `success` boolean; app menampilkan
+  pesan dari `message`. Tidak perlu file server baru.
 - **Pengaturan** (`lib/settings/settings_page.dart`): hub aplikasi berisi sub-halaman
   Akun (data & logout), Tema (Sistem/Terang/Gelap — disimpan di preferensi & dipakai
   `MaterialApp.themeMode`), Notifikasi (toggle + register token FCM), Privasi
@@ -152,8 +153,8 @@ armeabi-v7a; x86_64 dipisah untuk emulator) — sertifikat resmi SHA-256
   orang tua/wali, grid lampiran dokumen (buka file via url_launcher),
   pull-to-refresh.
 - `lib/edit_profil/edit_profil_page.dart` — form edit profil siswa (semua kolom
-  tabel `siswa`), kirim `POST app/api/apk/siswa/update_siswa`, reload otomatis
-  saat kembali ke tab Profil.
+  tabel `siswa`), kirim `POST app/api/apk/profil_siswa` (aksi `update`), reload
+  otomatis saat kembali ke tab Profil.
 - `lib/tabs/pengumuman_tab.dart` — pengumuman madrasah dari
   `POST app/api/apk/siswa/pengumuman` (aksi `list`/`detail`): kartu prioritas
   (Urgent/Penting/Biasa), pratinjau isi, tanggal Indonesia, pembuat, lampiran,

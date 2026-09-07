@@ -8,7 +8,7 @@ import '../core/fcm.dart';
 import '../core/session.dart';
 
 /// Versi aplikasi — ikuti versi terbaru di pubspec/footer login.
-const kAppVersion = '1.425';
+const kAppVersion = '1.426';
 
 // ----------------------------------------------------------------------------
 // Pengaturan (daftar gaya aplikasi: navigasi ke Akun, Tema, Notifikasi, dll.)
