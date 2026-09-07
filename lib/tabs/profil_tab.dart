@@ -67,8 +67,24 @@ class _ProfilTabState extends State<ProfilTab> {
 
   Map<String, dynamic>? get _mutasi => _m(_data?['mutasi']);
 
-  Map<String, dynamic>? _ortu(String key) =>
-      _m(_m(_data?['orangtua'])?[key]);
+  Map<String, dynamic>? _ortu(String key) {
+    final o = _data?['orangtua'];
+    if (o is Map) {
+      for (final e in o.entries) {
+        if (_norm(e.key) == key) return _m(e.value);
+      }
+    } else if (o is List) {
+      for (final e in o.whereType<Map>()) {
+        final j = e['jenis']?.toString().toLowerCase() ??
+            e['hubungan']?.toString().toLowerCase() ??
+            '';
+        if (j.trim() == key) return _m(e);
+      }
+    }
+    return null;
+  }
+
+  String _norm(String s) => s.trim().toLowerCase();
 
   Map<String, dynamic>? get _ayah => _ortu('ayah');
   Map<String, dynamic>? get _ibu => _ortu('ibu');
@@ -801,37 +817,104 @@ class _ProfilTabState extends State<ProfilTab> {
         'Siswa ini berstatus aktif. Hubungi operator madrasah untuk melengkapi data $label.',
       );
     }
-    return _buildSection(
-      context,
-      accent: const Color(0xFF6A1B9A),
-      icon: switch (jenis) {
-        'ayah' => Icons.man_outlined,
-        'ibu' => Icons.woman_outlined,
-        _ => Icons.verified_user_outlined,
-      },
-      title: 'Data $label',
-      rows: [
-        (Icons.badge_outlined, 'Nama', p['nama']?.toString() ?? ''),
-        (Icons.credit_card_outlined, 'NIK', p['nik']?.toString() ?? ''),
-        (Icons.favorite_outline, 'Status Hidup',
-            p['status_hidup']?.toString() ?? ''),
-        if (jenis == 'wali')
-          (Icons.deck_outlined, 'Hubungan', p['hubungan']?.toString() ?? ''),
-        (Icons.cake_outlined,
-            'Tempat & Tanggal Lahir',
-            [
-              p['tempat_lahir']?.toString() ?? '',
-              p['tanggal_lahir']?.toString() ?? '',
-            ].where((e) => e.isNotEmpty).join(', ')),
-        (Icons.school_outlined, 'Pendidikan',
-            p['pendidikan']?.toString() ?? ''),
-        (Icons.work_outline, 'Pekerjaan', p['pekerjaan']?.toString() ?? ''),
-        (Icons.payments_outlined, 'Penghasilan',
-            p['penghasilan']?.toString() ?? ''),
-        (Icons.phone_outlined, 'Telepon', p['telepon']?.toString() ?? ''),
-        (Icons.home_outlined, 'Alamat', p['alamat']?.toString() ?? ''),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildSection(
+          context,
+          accent: const Color(0xFF6A1B9A),
+          icon: switch (jenis) {
+            'ayah' => Icons.man_outlined,
+            'ibu' => Icons.woman_outlined,
+            _ => Icons.verified_user_outlined,
+          },
+          title: 'Data $label',
+          rows: _ortuRows(p),
+        ),
+        if (_ortuExtra(p).isNotEmpty) ...[
+          const SizedBox(height: 12),
+          _buildSection(
+            context,
+            accent: const Color(0xFF00695C),
+            icon: Icons.fact_check_outlined,
+            title: 'Data Lengkap $label',
+            rows: _ortuExtra(p),
+          ),
+        ],
       ],
     );
+  }
+
+  List<(IconData, String, String)> _ortuRows(Map<String, dynamic> p) {
+    final out = <(IconData, String, String)>[];
+    final known = <String, (IconData, String)>{
+      'nama': (Icons.badge_outlined, 'Nama'),
+      'nik': (Icons.credit_card_outlined, 'NIK'),
+      'status_hidup': (Icons.favorite_outline, 'Status Hidup'),
+      'tempat_lahir': (Icons.cake_outlined, 'Tempat Lahir'),
+      'tanggal_lahir': (Icons.event_outlined, 'Tanggal Lahir'),
+      'pendidikan': (Icons.school_outlined, 'Pendidikan'),
+      'pekerjaan': (Icons.work_outline, 'Pekerjaan'),
+      'penghasilan': (Icons.payments_outlined, 'Penghasilan'),
+      'telepon': (Icons.phone_outlined, 'Telepon'),
+      'alamat': (Icons.home_outlined, 'Alamat'),
+      'hubungan': (Icons.deck_outlined, 'Hubungan'),
+      'agama': (Icons.church_outlined, 'Agama'),
+      'no_kk': (Icons.family_restroom_outlined, 'No. KK'),
+      'rt': (Icons.house_outlined, 'RT'),
+      'rw': (Icons.house_outlined, 'RW'),
+      'kelurahan': (Icons.location_city_outlined, 'Kelurahan'),
+      'desa': (Icons.location_city_outlined, 'Desa'),
+      'kecamatan': (Icons.map_outlined, 'Kecamatan'),
+      'kabupaten': (Icons.map_outlined, 'Kabupaten'),
+      'kota': (Icons.map_outlined, 'Kota/Kab'),
+      'provinsi': (Icons.public_outlined, 'Provinsi'),
+      'kode_pos': (Icons.mail_outline, 'Kode Pos'),
+      'status_perkawinan': (Icons.favorite_border, 'Status Perkawinan'),
+    };
+    for (final e in p.entries) {
+      final spec = known[e.key.trim().toLowerCase()];
+      final v = e.value?.toString().trim() ?? '';
+      if (spec != null && v.isNotEmpty) {
+        out.add((spec.$1, spec.$2, v));
+      }
+    }
+    return out;
+  }
+
+  List<(IconData, String, String)> _ortuExtra(Map<String, dynamic> p) {
+    const meta = {'id', 'siswa_id', 'jenis'};
+    final shown = {
+      'nama', 'nik', 'status_hidup', 'tempat_lahir', 'tanggal_lahir',
+      'pendidikan', 'pekerjaan', 'penghasilan', 'telepon', 'alamat',
+      'hubungan', 'agama', 'no_kk', 'rt', 'rw', 'kelurahan', 'desa',
+      'kecamatan', 'kabupaten', 'kota', 'provinsi', 'kode_pos',
+      'status_perkawinan',
+    };
+    final out = <(IconData, String, String)>[];
+    for (final e in p.entries) {
+      final key = e.key.trim().toLowerCase();
+      final v = e.value?.toString().trim() ?? '';
+      if (v.isEmpty || meta.contains(key) || shown.contains(key)) continue;
+      out.add((Icons.info_outline, _fieldLabel(e.key), v));
+    }
+    return out;
+  }
+
+  String _fieldLabel(String key) {
+    const acronyms = {
+      'nik': 'NIK', 'kk': 'KK', 'ktp': 'KTP', 'hp': 'HP', 'rt': 'RT',
+      'rw': 'RW', 'nisn': 'NISN', 'nis': 'NIS',
+    };
+    final words = key
+        .split(RegExp(r'[_\s-]+'))
+        .where((w) => w.isNotEmpty)
+        .map((w) {
+      final low = w.toLowerCase();
+      if (acronyms.containsKey(low)) return acronyms[low]!;
+      return w[0].toUpperCase() + w.substring(1);
+    }).join(' ');
+    return words;
   }
 
   Widget _buildLampiranTab(BuildContext context) {

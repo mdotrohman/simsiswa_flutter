@@ -202,7 +202,7 @@ class _LoginPageState extends State<LoginPage> {
                           _buildCard(),
                           const SizedBox(height: 16),
                           const Text(
-                            'v1.420 Premium',
+                            'v1.421 Premium',
                             style: TextStyle(color: Colors.white54, fontSize: 12),
                           ),
                         ],
