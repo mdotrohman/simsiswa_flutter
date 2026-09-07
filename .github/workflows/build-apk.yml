@@ -39,6 +39,7 @@ jobs:
 
   ios-build:
     name: "iOS build (validasi semua device)"
+    if: github.event_name == 'workflow_dispatch'   # macOS runner berbayar; hanya manual
     runs-on: macos-latest
     steps:
       - name: Checkout
