@@ -59,16 +59,19 @@ jobs:
           flutter analyze
           flutter test
 
-      # IPA tanpa tanda tangan: belum bisa install langsung di iPhone.
-      # Dikemas + di-export; sign ulang di Mac (Xcode/Apple cert) barulah
-      # distributable (Ad Hoc/Dev/TestFlight). Lihat README "iOS".
-      - name: Build iOS (release, no codesign) + archive ke IPA
-        run: |
-          flutter build ios --release --no-codesign
-          flutter build ipa --release --no-codesign
+      # `--no-codesign` menghasilkan Runner.app + Runner.xcarchive (bukan .ipa;
+      # "skipping IPA" karena tanpa tanda tangan). Paket ini di-export/sign ulang
+      # di Mac (Xcode/Apple cert) barulah distributable (Ad Hoc/Dev/TestFlight).
+      - name: Build iOS (release, no codesign)
+        run: flutter build ios --release --no-codesign
 
-      - name: Upload IPA
+      - name: Archive iOS (no codesign) → xcarchive
+        run: flutter build ipa --release --no-codesign --export-options-plist=/dev/stdin <<< "{ }"
+
+      - name: Upload xcarchive
         uses: actions/upload-artifact@v4
         with:
-          name: ios-ipa
-          path: build/ios/ipa/*.ipa
+          name: ios-xcarchive
+          path: |
+            build/ios/archive/Runner.xcarchive
+            build/ios/iphoneos/Runner.app

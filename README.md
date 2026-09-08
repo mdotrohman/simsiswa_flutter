@@ -76,23 +76,6 @@ lama untuk siswa & wali. Satu codebase Flutter.
 - Kontrak upload lampiran: `POST app/api/apk/profil_siswa` **multipart/form-data**
   `{aksi:'upload', field}` + file `file` (gambar JPG/PNG/WebP/GIF/BMP atau PDF,
   maks 5 MB) → file disimpan di `<script_dir>/uploads_lampiran/<rand>.ext` (folder
-  dibuat otomatis, **butuh izin tulis PHP**), url relatif `uploads_lampiran/<name>`
-  di-resolve aplikasi ke base URL → respons `data.lampiran` = daftar terbaru.
-- **Pengaturan** (`lib/settings/settings_page.dart`): hub aplikasi berisi sub-halaman
-  Akun (data & logout), Tema (Sistem/Terang/Gelap — disimpan di preferensi & dipakai
-  `MaterialApp.themeMode`), Notifikasi (toggle + register token FCM), Privasi
-  (hapus data lokal), dan Tentang.
-- Nomor versi memakai 3 digit belakang (mis. `v1.411`), naik satu per build.
-
-## Cara Build (rekomendasi dari pengalaman nyata)
-
-Ada **dua jalur**, dipakai sesuai kebutuhan:
-
-| Kebutuhan | Jalur | Keterangan |
-|---|---|---|
-| **Development / iterasi cepat** | CI arm64 + `fetch_ci.sh` + `build_local.sh` | Push → CI ±3–4m → unduh (anti-race) → sign 4 detik. |
-| **Rilis yang dipakai publik** | GitHub Actions (`build-full.yml`) | Workflow terpisah: semua ABI (dispatch manual / tag `v*`). |
-| **Rilis final** | Lokal + injeksi lib dari artefak CI | Byte-identik dgn hasil CI. |
 | **Satu file untuk semua** | Lokal (universal/fat APK) | Gabung lib arm64+v7a → 1 APK (±15MB); fast-path arm64 saja ±8,6MB. |
 
 ### Kenapa dua jalur? (pelajaran yang sudah dibuktikan)
@@ -139,11 +122,12 @@ Tidak bisa dibangun dari Linux; perlu runner macOS. Aktifkan secara manual:
 ```bash
 gh workflow run build-apk.yml        # job `ios-build` (macos-latest) hanya jalan saat workflow_dispatch
 gh run list --limit 1 --json databaseId,status
-gh run download <run-id> -n ios-ipa -D /tmp/ios_ipa
+gh run download <run-id> -n ios-xcarchive -D /tmp/ios_ios
 ```
 
-Hasil `build/ios/ipa/Runner.ipa` **belum bertanda tangan** (no-codesign) —
-belum bisa langsung di-install iPhone. Selesaikan penandatanganan di **Mac**:
+Hasil `build/ios/archive/Runner.xcarchive` (+ `Runner.app`) **belum bertanda
+tangan** (no-codesign — Flutter otomatis melewati pembuatan `.ipa`). Selesaikan
+penandatanganan di **Mac** (butuh Apple Developer account):
 
 1. **Profil developer (Ad Hoc/Development)** — pakai Apple Developer account:
    `xcodebuild -exportArchive -archivePath ... -exportOptionsPlist ExportOptions.plist` dengan
