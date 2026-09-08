@@ -180,8 +180,10 @@ armeabi-v7a; x86_64 dipisah untuk emulator) — sertifikat resmi SHA-256
   dengan zoom, PDF via `pdfx` `PdfViewPinch` (`lib/viewers`).
 - `lib/edit_profil/edit_profil_page.dart` — form edit profil siswa (semua kolom
   tabel `siswa`), kirim `POST app/api/apk/profil_siswa` (aksi `update`), reload
-  otomatis saat kembali ke tab Profil. Tab Lampiran mendukung **upload** dokumen
-  per field (ikon + / upload, file_picker, multipart aksi `upload`).
+  otomatis saat kembali ke tab Profil. Tombol **Simpan Data** selalu tampil di
+  bar bawah (floating) + aksi Simpan di pojok kanan atas. Tab Lampiran
+  mendukung **upload** per dokumen (baris penuh tappable, status jelas
+  "terunggah/belum" + badge jumlah di header section).
 - `lib/tabs/pengumuman_tab.dart` — pengumuman madrasah dari
   `POST app/api/apk/siswa/pengumuman` (aksi `list`/`detail`): kartu prioritas
   (Urgent/Penting/Biasa), pratinjau isi, tanggal Indonesia, pembuat, lampiran,

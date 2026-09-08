@@ -411,7 +411,8 @@ class _EditProfilPageState extends State<EditProfilPage> {
   }
 
   Widget _section(
-      String title, IconData icon, Color accent, List<Widget> fields) {
+      String title, IconData icon, Color accent, List<Widget> fields,
+      {String? badge}) {
     final s = Theme.of(context).colorScheme;
     final content = <Widget>[];
     for (var i = 0; i < fields.length; i++) {
@@ -446,10 +447,13 @@ class _EditProfilPageState extends State<EditProfilPage> {
                 child: Icon(icon, size: 19, color: accent),
               ),
               const SizedBox(width: 10),
-              Text(title,
-                  style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w800)),
-              const Spacer(),
+              Expanded(
+                child: Text(title,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w800)),
+              ),
+              const SizedBox(width: 8),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -457,7 +461,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
                   color: accent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text('${fields.length} field',
+                child: Text(badge ?? '${fields.length} field',
                     style: TextStyle(fontSize: 11, color: accent)),
               ),
             ],
@@ -699,6 +703,9 @@ class _EditProfilPageState extends State<EditProfilPage> {
 
   Widget _tabLampiran() {
     final s = Theme.of(context).colorScheme;
+    final total = _lampiran.length;
+    final unggah =
+        _lampiran.where((e) => (e['url']?.toString().isNotEmpty ?? false)).length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -710,18 +717,11 @@ class _EditProfilPageState extends State<EditProfilPage> {
                   color: s.onSurfaceVariant),
               title: const Text('Belum ada dokumen lampiran.'),
               subtitle: const Text(
-                  'Ketuk ikon tambah pada tiap dokumen untuk mengunggah file.'),
+                  'Dokumen siswa akan tampil di sini dan bisa diunggah.'),
             )
           else
-            for (final d in _lampiran) ...[
-              _lampRow(s, d),
-              if (!identical(d, _lampiran.last))
-                Divider(
-                    height: 1,
-                    thickness: 0.7,
-                    color: s.outlineVariant.withValues(alpha: 0.35)),
-            ],
-        ]),
+            for (final d in _lampiran) _lampRow(s, d),
+        ], badge: '$unggah/$total terunggah'),
         const SizedBox(height: 6),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -732,7 +732,8 @@ class _EditProfilPageState extends State<EditProfilPage> {
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  'Gambar JPG/PNG/WebP/GIF/BMP atau PDF, maksimal 5 MB.',
+                  'Ketuk baris yang belum terunggah untuk memilih file. Gambar '
+                  'JPG/PNG/WebP/GIF/BMP atau PDF, maksimal 5 MB.',
                   style: TextStyle(
                       fontSize: 11.5, color: s.onSurfaceVariant),
                 ),
@@ -751,44 +752,113 @@ class _EditProfilPageState extends State<EditProfilPage> {
     final hasUrl = url.isNotEmpty;
     final uploading = _uploadingField == field;
     final (icon, color) = _lampStyle(field, s);
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Container(
-        width: 38,
-        height: 38,
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(11),
-        ),
-        child: Icon(icon, size: 20, color: color),
-      ),
-      title: Text(label,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-      subtitle: Text(
-          uploading
-              ? 'Mengunggah…'
-              : hasUrl
-                  ? 'Buka di aplikasi'
-                  : 'Belum dilampirkan',
-          style: TextStyle(fontSize: 11.5, color: s.onSurfaceVariant)),
-      enabled: hasUrl,
-      onTap: hasUrl ? () => _openLampiran(url, label) : null,
-      trailing: SizedBox(
-        width: 34,
-        height: 34,
-        child: uploading
-            ? Padding(
-                padding: const EdgeInsets.all(5),
-                child: CircularProgressIndicator(
-                    strokeWidth: 2.5, color: s.primary),
-              )
-            : IconButton(
-                tooltip: hasUrl ? 'Ganti file' : 'Unggah file',
-                padding: EdgeInsets.zero,
-                icon: Icon(hasUrl ? Icons.upload_file : Icons.add_circle_outline),
-                color: hasUrl ? s.primary : s.onSurfaceVariant,
-                onPressed: () => _pickAndUpload(d),
+    const orange = Color(0xFFF59E0B);
+    const ok = Color(0xFF43A047);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Material(
+        color: hasUrl
+            ? s.surface
+            : s.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: uploading
+              ? null
+              : () => hasUrl
+                  ? _openLampiran(url, label)
+                  : _pickAndUpload(d),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: hasUrl
+                    ? s.outlineVariant.withValues(alpha: 0.5)
+                    : orange.withValues(alpha: 0.6),
+                width: hasUrl ? 1 : 1.4,
               ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: hasUrl
+                        ? color.withValues(alpha: 0.14)
+                        : s.outlineVariant.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Icon(icon, size: 22,
+                      color: hasUrl ? color : s.onSurfaceVariant),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(label,
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                              uploading
+                                  ? Icons.hourglass_top
+                                  : hasUrl
+                                      ? Icons.check_circle
+                                      : Icons.error_outline,
+                              size: 14,
+                              color: uploading
+                                  ? s.primary
+                                  : hasUrl
+                                      ? ok
+                                      : orange),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                                uploading
+                                    ? 'Mengunggah…'
+                                    : hasUrl
+                                        ? 'Tersimpan — ketuk untuk lihat'
+                                        : 'Belum unggah — ketuk untuk pilih file',
+                                style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: uploading
+                                        ? s.primary
+                                        : hasUrl
+                                            ? ok
+                                            : orange)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6),
+                uploading
+                    ? SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: Padding(
+                          padding: const EdgeInsets.all(5),
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2.5, color: s.primary),
+                        ),
+                      )
+                    : Icon(
+                        hasUrl
+                            ? Icons.check_circle
+                            : Icons.add_circle,
+                        size: hasUrl ? 30 : 36,
+                        color: hasUrl ? ok : orange),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -953,7 +1023,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
           ? const Center(child: CircularProgressIndicator())
           : Form(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                 children: [
                   _tabBar(Theme.of(context).colorScheme),
                   const SizedBox(height: 14),
@@ -966,21 +1036,29 @@ class _EditProfilPageState extends State<EditProfilPage> {
                     5 => _tabLampiran(),
                     _ => _tabRiwayat(),
                   },
-                  const SizedBox(height: 8),
-                  FilledButton.icon(
-                    onPressed: _saving ? null : _save,
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    icon: const Icon(Icons.check),
-                    label: const Text('Simpan Data',
-                        style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w800)),
-                  ),
-                  const SizedBox(height: 24),
                 ],
               ),
             ),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        child: FilledButton.icon(
+          onPressed: _saving ? null : _save,
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+          ),
+          icon: _saving
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2.2))
+              : const Icon(Icons.check_circle_outline),
+          label: Text(_saving ? 'Menyimpan…' : 'Simpan Data',
+              style: const TextStyle(
+                  fontSize: 15, fontWeight: FontWeight.w800)),
+        ),
+      ),
     );
   }
 }
