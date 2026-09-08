@@ -44,6 +44,11 @@ lama untuk siswa & wali. Satu codebase Flutter.
   `lib/viewers/lampiran_viewer_page.dart` — gambar (png/jpg/jpeg/webp/gif/bmp)
   dengan pinch-zoom, dan PDF dirender via `pdfx` (`PdfViewPinch`); tipe lain
   ditampilkan sebagai "belum didukung" dengan tombol coba lagi.
+- **Upload lampiran** (gambar/PDF, maks 5 MB): dari tab Lampiran Edit Profil
+  (ikon + / upload per dokumen) maupun tombol **Unggah / Kelola** di tab
+  Lampiran profil. Aplikasi memilih file (file_picker), kirim multipart ke
+  `profil_siswa.php` aksi `upload` (token dari sesi), dan daftar lampiran
+  di-refresh dari respons server.
 - **Tema Material You**: seluruh pewarnaan (background, appbar, nav, kartu, login)
   mengikuti color scheme wallpaper Android; fallback ke seed emerald brand bila
   dynamic color tak tersedia.
@@ -68,6 +73,11 @@ lama untuk siswa & wali. Satu codebase Flutter.
   `profil_siswa` yang sudah ada** — baca `GET`, simpan `POST app/api/apk/profil_siswa`
   dengan JSON `{aksi:'update', siswa_id, data}` → `success` boolean; app menampilkan
   pesan dari `message`. Tidak perlu file server baru.
+- Kontrak upload lampiran: `POST app/api/apk/profil_siswa` **multipart/form-data**
+  `{aksi:'upload', field}` + file `file` (gambar JPG/PNG/WebP/GIF/BMP atau PDF,
+  maks 5 MB) → file disimpan di `<script_dir>/uploads_lampiran/<rand>.ext` (folder
+  dibuat otomatis, **butuh izin tulis PHP**), url relatif `uploads_lampiran/<name>`
+  di-resolve aplikasi ke base URL → respons `data.lampiran` = daftar terbaru.
 - **Pengaturan** (`lib/settings/settings_page.dart`): hub aplikasi berisi sub-halaman
   Akun (data & logout), Tema (Sistem/Terang/Gelap — disimpan di preferensi & dipakai
   `MaterialApp.themeMode`), Notifikasi (toggle + register token FCM), Privasi
@@ -170,7 +180,8 @@ armeabi-v7a; x86_64 dipisah untuk emulator) — sertifikat resmi SHA-256
   dengan zoom, PDF via `pdfx` `PdfViewPinch` (`lib/viewers`).
 - `lib/edit_profil/edit_profil_page.dart` — form edit profil siswa (semua kolom
   tabel `siswa`), kirim `POST app/api/apk/profil_siswa` (aksi `update`), reload
-  otomatis saat kembali ke tab Profil.
+  otomatis saat kembali ke tab Profil. Tab Lampiran mendukung **upload** dokumen
+  per field (ikon + / upload, file_picker, multipart aksi `upload`).
 - `lib/tabs/pengumuman_tab.dart` — pengumuman madrasah dari
   `POST app/api/apk/siswa/pengumuman` (aksi `list`/`detail`): kartu prioritas
   (Urgent/Penting/Biasa), pratinjau isi, tanggal Indonesia, pembuat, lampiran,

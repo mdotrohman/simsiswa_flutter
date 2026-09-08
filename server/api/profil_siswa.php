@@ -14,6 +14,11 @@ declare(strict_types=1);
  * aksi=update (POST JSON): simpan perubahan data siswa/sekolah/mutasi/ortu.
  * Body: {aksi:'update', data:{siswa, sekolah_asal, mutasi, orangtua}}.
  * siswa_id tetap dari sesi, bukan dari body.
+ *
+ * Upload lampiran (POST multipart/form-data): field=<nama_field> + file=<file>
+ * (gambar JPG/PNG/WebP/GIF/BMP atau PDF, maks 5 MB). File disimpan di
+ * <script_dir>/uploads_lampiran; url yang tersimpan relatif
+ * ('uploads_lampiran/<name>') dan di-resolve aplikasi ke base URL.
  */
 
 require_once __DIR__ . '/guard.php';
@@ -92,6 +97,101 @@ function dbCols(PDO $pdo, string $table): array {
 }
 function hasCol(PDO $pdo, string $table, string $col): bool {
     return in_array(strtolower($col), dbCols($pdo, $table), true);
+}
+
+/* ===== LAMPIRAN: daftar field & builder respons ===== */
+$lampiranMap = [
+    'file_foto'       => 'Foto Siswa',
+    'file_kk'         => 'Kartu Keluarga',
+    'file_akta'       => 'Akta Lahir',
+    'file_ijazah'     => 'Ijazah',
+    'file_skl'        => 'SKL',
+    'file_ktp_ayah'   => 'KTP Ayah',
+    'file_ktp_ibu'    => 'KTP Ibu',
+    'file_ktp_wali'   => 'KTP Wali',
+    'file_kip'        => 'KIP',
+    'file_rapor_asal' => 'Rapor Asal',
+    'file_lain1'      => 'Lampiran Lain 1',
+    'file_lain2'      => 'Lampiran Lain 2',
+    'file_lain3'      => 'Lampiran Lain 3',
+];
+
+$buildLampiran = function (int $siswaId) use ($pdo, $lampiranMap): array {
+    $dLamp = dbRow($pdo, "SELECT * FROM lampiran_siswa WHERE siswa_id = ? LIMIT 1", [$siswaId]);
+    $out = [];
+    foreach ($lampiranMap as $field => $label) {
+        $out[] = [
+            'field' => $field,
+            'label' => $label,
+            'tersedia' => !empty($dLamp[$field]),
+            'url' => $dLamp[$field] ?? null,
+        ];
+    }
+    return $out;
+};
+
+/* ===== LAMPIRAN UPLOAD (multipart/form-data) =====
+   Body: field=<nama_field>&file=<file>. Url tersimpan relatif
+   (uploads_lampiran/<name>) — aplikasi meresolusi ke base URL.
+   Mengembalikan data.lampiran terbaru. */
+$contentType = (string)($_SERVER['CONTENT_TYPE'] ?? '');
+if (strpos($contentType, 'multipart/form-data') !== false) {
+    try {
+        $field = strtolower((string)($_POST['field'] ?? ''));
+        if (!isset($lampiranMap[$field])) {
+            jsonOut(false, 'Jenis lampiran tidak dikenal.', [], 400);
+        }
+        if (empty($_FILES['file']) || !is_uploaded_file($_FILES['file']['tmp_name'])) {
+            jsonOut(false, 'Tidak ada file yang diunggah.', [], 400);
+        }
+        $f = $_FILES['file'];
+        if (isset($f['error']) && $f['error'] !== UPLOAD_ERR_OK) {
+            $msg = 'Gagal mengunggah file.';
+            if ($f['error'] === UPLOAD_ERR_INI_SIZE || $f['error'] === UPLOAD_ERR_FORM_SIZE) {
+                $msg = 'Ukuran file terlalu besar.';
+            }
+            if ($f['error'] === UPLOAD_ERR_NO_FILE) {
+                $msg = 'Tidak ada file yang diunggah.';
+            }
+            jsonOut(false, $msg, [], 400);
+        }
+        if ((int)$f['size'] > 5 * 1024 * 1024) {
+            jsonOut(false, 'Ukuran file maksimal 5 MB.', [], 400);
+        }
+        $ext = strtolower((string)pathinfo((string)($f['name'] ?? ''), PATHINFO_EXTENSION));
+        if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'pdf'], true)) {
+            jsonOut(false, 'Jenis file tidak didukung (gambar: JPG/PNG/WebP/GIF/BMP, dokumen: PDF).', [], 400);
+        }
+        if (!hasCol($pdo, 'lampiran_siswa', $field)) {
+            jsonOut(false, 'Kolom lampiran tidak tersedia di server.', [], 500);
+        }
+        $dir = __DIR__ . '/uploads_lampiran';
+        if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
+            jsonOut(false, 'Direktori upload tidak dapat dibuat.', [], 500);
+        }
+        $fileName = $field . '_' . $siswa_id . '_' . date('Ymd_His') . '_'
+            . bin2hex(random_bytes(4)) . '.' . $ext;
+        if (!move_uploaded_file($f['tmp_name'], $dir . '/' . $fileName)) {
+            jsonOut(false, 'Gagal menyimpan file di server.', [], 500);
+        }
+        $storedUrl = 'uploads_lampiran/' . $fileName;
+
+        $row = dbRow($pdo, 'SELECT id FROM lampiran_siswa WHERE siswa_id = ? LIMIT 1', [$siswa_id]);
+        if ($row) {
+            $stmt = $pdo->prepare('UPDATE lampiran_siswa SET `' . $field . '` = ? WHERE id = ?');
+            $stmt->execute([$storedUrl, $row['id']]);
+        } else {
+            $stmt = $pdo->prepare('INSERT INTO lampiran_siswa (siswa_id, `' . $field . '`) VALUES (?, ?)');
+            $stmt->execute([$siswa_id, $storedUrl]);
+        }
+
+        jsonOut(true, $lampiranMap[$field] . ' berhasil diunggah.', [
+            'lampiran' => $buildLampiran($siswa_id),
+        ]);
+    } catch (Throwable $e) {
+        error_log('[profil_siswa.upload] ' . $e->getMessage());
+        jsonOut(false, 'Gagal mengunggah: ' . $e->getMessage(), [], 500);
+    }
 }
 
 /* ===== SISWA UPDATE (aksi=update) ===== */
@@ -350,31 +450,7 @@ try {
     }
 
     /* ── Lampiran dokumen ── */
-    $dLamp = dbRow($pdo, "SELECT * FROM lampiran_siswa WHERE siswa_id = ? LIMIT 1", [$siswa_id]);
-    $lampiranMap = [
-        'file_foto'       => 'Foto Siswa',
-        'file_kk'         => 'Kartu Keluarga',
-        'file_akta'       => 'Akta Lahir',
-        'file_ijazah'     => 'Ijazah',
-        'file_skl'        => 'SKL',
-        'file_ktp_ayah'   => 'KTP Ayah',
-        'file_ktp_ibu'    => 'KTP Ibu',
-        'file_ktp_wali'   => 'KTP Wali',
-        'file_kip'        => 'KIP',
-        'file_rapor_asal' => 'Rapor Asal',
-        'file_lain1'      => 'Lampiran Lain 1',
-        'file_lain2'      => 'Lampiran Lain 2',
-        'file_lain3'      => 'Lampiran Lain 3',
-    ];
-    $lampiranOut = [];
-    foreach ($lampiranMap as $field => $label) {
-        $lampiranOut[] = [
-            'field' => $field,
-            'label' => $label,
-            'tersedia' => !empty($dLamp[$field]),
-            'url' => $dLamp[$field] ?? null,
-        ];
-    }
+    $lampiranOut = $buildLampiran($siswa_id);
 
     /* ── Riwayat kelas ── */
     $riwayat = dbRows($pdo, "

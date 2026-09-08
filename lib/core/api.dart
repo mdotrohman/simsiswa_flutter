@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -178,5 +179,61 @@ class Api {
     }
     throw ApiException(
         200, json['message']?.toString() ?? 'Gagal menyimpan data siswa.');
+  }
+
+  /// Upload satu dokumen lampiran (POST multipart ke profil_siswa.php,
+  /// aksi `upload`). Mengembalikan objek `data` (berisi `lampiran` terbaru).
+  /// [filename] dipakai untuk ekstensi & tampilan; isi file dari [bytes].
+  static Future<Map<String, dynamic>> uploadLampiran(
+    String field,
+    Uint8List bytes,
+    String filename,
+  ) async {
+    final uri =
+        Uri.parse(kApiBaseUrl).resolve('app/api/apk/profil_siswa');
+    final req = http.MultipartRequest('POST', uri);
+    final token = Session.token;
+    if (token.isNotEmpty) req.headers['Authorization'] = 'Bearer $token';
+    req.fields['aksi'] = 'upload';
+    req.fields['field'] = field;
+    req.files
+        .add(http.MultipartFile.fromBytes('file', bytes, filename: filename));
+
+    http.Response res;
+    try {
+      final streamed =
+          await req.send().timeout(const Duration(seconds: 90));
+      res = await http.Response.fromStream(streamed);
+    } catch (e) {
+      throw ApiException(0, 'Koneksi gagal: $e');
+    }
+
+    switch (res.statusCode) {
+      case 403:
+        throw ApiException(403, 'Koneksi ditolak (pastikan menggunakan HTTPS)');
+      case 429:
+        throw ApiException(429, 'Terlalu banyak percobaan. Coba lagi dalam 15 menit.');
+      case 401:
+        throw ApiException(401, 'Sesi berakhir. Silakan login ulang.');
+      default:
+        if (res.statusCode >= 500) {
+          throw ApiException(res.statusCode, 'Server sedang bermasalah. Silakan coba lagi.');
+        }
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          throw ApiException(res.statusCode, 'Gagal mengunggah (kode: ${res.statusCode})');
+        }
+    }
+
+    try {
+      final json = jsonDecode(res.body) as Map<String, dynamic>;
+      if (json['success'] != true || json['data'] is! Map) {
+        throw ApiException(
+            200, json['message']?.toString() ?? 'Gagal mengunggah lampiran.');
+      }
+      return (json['data'] as Map<String, dynamic>);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(res.statusCode, 'Respons tidak valid dari server.');
+    }
   }
 }

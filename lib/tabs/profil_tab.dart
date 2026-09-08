@@ -333,10 +333,10 @@ class _ProfilTabState extends State<ProfilTab> {
     );
   }
 
-  Future<void> _openEdit() async {
+  Future<void> _openEdit({int tab = 0}) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => EditProfilPage(data: _data),
+        builder: (_) => EditProfilPage(data: _data, initialTab: tab),
       ),
     );
     _load();
@@ -903,21 +903,36 @@ class _ProfilTabState extends State<ProfilTab> {
     final s = Theme.of(context).colorScheme;
     final docs =
         _lampiran.where((e) => (e['tersedia'] ?? false) == true).toList();
-    if (docs.isEmpty) {
-      return _emptyCard(s, Icons.folder_open_outlined,
-          'Belum ada dokumen lampiran.', 'Dokumen siswa akan tampil di sini.');
-    }
-    return LayoutBuilder(
-      builder: (context, c) {
-        final w = (c.maxWidth - 10) / 2;
-        return Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            for (final d in docs) SizedBox(width: w, child: _lampCard(s, d)),
-          ],
-        );
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            style: TextButton.styleFrom(foregroundColor: s.primary),
+            onPressed: () => _openEdit(tab: 5),
+            icon: const Icon(Icons.upload_file, size: 17),
+            label: const Text('Unggah / Kelola'),
+          ),
+        ),
+        if (docs.isEmpty)
+          _emptyCard(s, Icons.folder_open_outlined,
+              'Belum ada dokumen lampiran.', 'Dokumen siswa akan tampil di sini.')
+        else
+          LayoutBuilder(
+            builder: (context, c) {
+              final w = (c.maxWidth - 10) / 2;
+              return Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  for (final d in docs)
+                    SizedBox(width: w, child: _lampCard(s, d)),
+                ],
+              );
+            },
+          ),
+      ],
     );
   }
 

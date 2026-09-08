@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../core/api.dart';
@@ -12,10 +13,13 @@ import '../viewers/lampiran_viewer_page.dart';
 /// POST app/api/apk/profil_siswa (aksi `update`) — endpoint yang sama dengan
 /// pembacaan profil, tidak perlu file server baru.
 class EditProfilPage extends StatefulWidget {
-  const EditProfilPage({super.key, this.data});
+  const EditProfilPage({super.key, this.data, this.initialTab = 0});
 
   /// Respons `data` dari GET profil_siswa.
   final Map<String, dynamic>? data;
+
+  /// Tab yang aktif saat halaman dibuka (indeks `_tabs`; 5 = Lampiran).
+  final int initialTab;
 
   @override
   State<EditProfilPage> createState() => _EditProfilPageState();
@@ -76,6 +80,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
 
   int _tab = 0;
   bool _saving = false;
+  String _uploadingField = '';
 
   late final Map<String, dynamic> _d;
   late final Map<String, dynamic> _siswa;
@@ -114,6 +119,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
   @override
   void initState() {
     super.initState();
+    _tab = widget.initialTab.clamp(0, _tabs.length - 1);
     _d = _asMap(widget.data);
     _siswa = _asMap(_d['siswa']);
     _sekolah = _d['sekolah_asal'] is Map ? _asMap(_d['sekolah_asal']) : null;
@@ -693,40 +699,171 @@ class _EditProfilPageState extends State<EditProfilPage> {
 
   Widget _tabLampiran() {
     final s = Theme.of(context).colorScheme;
-    if (_lampiran.isEmpty) {
-      return _emptyNote('Belum ada dokumen lampiran.',
-          'Dokumen siswa akan tampil di sini.');
-    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _section('Dokumen Lampiran', Icons.folder_outlined, s.tertiary, [
-          for (final d in _lampiran) ...[
+          if (_lampiran.isEmpty)
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(
-                  d['tersedia'] == true
-                      ? Icons.visibility_outlined
-                      : Icons.attach_file,
-                  color: d['tersedia'] == true ? s.primary : s.outlineVariant),
-              title: Text(d['label']?.toString() ?? 'Dokumen'),
-              subtitle: Text(
-                  d['url']?.toString().isEmpty ?? true
-                      ? 'Belum dilampirkan'
-                      : 'Buka di aplikasi'),
-              enabled: (d['url']?.toString().isNotEmpty ?? false),
-              onTap: (d['url']?.toString().isEmpty ?? true)
-                  ? null
-                  : () => _openLampiran(d['url']!.toString(),
-                      d['label']?.toString() ?? 'Dokumen'),
-            ),
-            if (!identical(d, _lampiran.last))
-              Divider(height: 1, thickness: 0.7,
-                  color: s.outlineVariant.withValues(alpha: 0.35)),
-          ],
+              leading: Icon(Icons.folder_open_outlined,
+                  color: s.onSurfaceVariant),
+              title: const Text('Belum ada dokumen lampiran.'),
+              subtitle: const Text(
+                  'Ketuk ikon tambah pada tiap dokumen untuk mengunggah file.'),
+            )
+          else
+            for (final d in _lampiran) ...[
+              _lampRow(s, d),
+              if (!identical(d, _lampiran.last))
+                Divider(
+                    height: 1,
+                    thickness: 0.7,
+                    color: s.outlineVariant.withValues(alpha: 0.35)),
+            ],
         ]),
+        const SizedBox(height: 6),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline,
+                  size: 15, color: s.onSurfaceVariant),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Gambar JPG/PNG/WebP/GIF/BMP atau PDF, maksimal 5 MB.',
+                  style: TextStyle(
+                      fontSize: 11.5, color: s.onSurfaceVariant),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
+  }
+
+  Widget _lampRow(ColorScheme s, Map<String, dynamic> d) {
+    final field = d['field']?.toString() ?? '';
+    final label = d['label']?.toString() ?? 'Dokumen';
+    final url = d['url']?.toString() ?? '';
+    final hasUrl = url.isNotEmpty;
+    final uploading = _uploadingField == field;
+    final (icon, color) = _lampStyle(field, s);
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(11),
+        ),
+        child: Icon(icon, size: 20, color: color),
+      ),
+      title: Text(label,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+      subtitle: Text(
+          uploading
+              ? 'Mengunggah…'
+              : hasUrl
+                  ? 'Buka di aplikasi'
+                  : 'Belum dilampirkan',
+          style: TextStyle(fontSize: 11.5, color: s.onSurfaceVariant)),
+      enabled: hasUrl,
+      onTap: hasUrl ? () => _openLampiran(url, label) : null,
+      trailing: SizedBox(
+        width: 34,
+        height: 34,
+        child: uploading
+            ? Padding(
+                padding: const EdgeInsets.all(5),
+                child: CircularProgressIndicator(
+                    strokeWidth: 2.5, color: s.primary),
+              )
+            : IconButton(
+                tooltip: hasUrl ? 'Ganti file' : 'Unggah file',
+                padding: EdgeInsets.zero,
+                icon: Icon(hasUrl ? Icons.upload_file : Icons.add_circle_outline),
+                color: hasUrl ? s.primary : s.onSurfaceVariant,
+                onPressed: () => _pickAndUpload(d),
+              ),
+      ),
+    );
+  }
+
+  (IconData, Color) _lampStyle(String field, ColorScheme s) {
+    return switch (field) {
+      'file_foto' => (Icons.face_outlined, s.primary),
+      'file_kk' => (Icons.family_restroom_outlined, const Color(0xFF00897B)),
+      'file_akta' => (Icons.description_outlined, const Color(0xFF3949AB)),
+      'file_ijazah' => (Icons.school_outlined, const Color(0xFFF57C00)),
+      'file_skl' => (Icons.verified_outlined, const Color(0xFF43A047)),
+      'file_ktp_ayah' => (Icons.man_outlined, const Color(0xFF6D4C41)),
+      'file_ktp_ibu' =>
+          (Icons.face_retouching_natural_outlined, const Color(0xFFAD1457)),
+      'file_ktp_wali' =>
+          (Icons.verified_user_outlined, const Color(0xFF546E7A)),
+      'file_kip' => (Icons.savings_outlined, const Color(0xFFE53935)),
+      'file_rapor_asal' =>
+          (Icons.receipt_long_outlined, const Color(0xFF00ACC1)),
+      _ => (Icons.attach_file, s.tertiary),
+    };
+  }
+
+  Future<void> _pickAndUpload(Map<String, dynamic> d) async {
+    final field = d['field']?.toString();
+    final label = d['label']?.toString() ?? 'Dokumen';
+    if (field == null || field.isEmpty) return;
+    final List<PlatformFile> files;
+    try {
+      files = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const [
+          'jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'pdf',
+        ],
+      );
+    } catch (_) {
+      _toast('Gagal membuka pemilih file.');
+      return;
+    }
+    if (files.isEmpty) return;
+    final file = files.first;
+    final size = file.lengthSync() ?? await file.length();
+    if (size > 5 * 1024 * 1024) {
+      _toast('Ukuran file maksimal 5 MB.');
+      return;
+    }
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _uploadingField = field);
+    try {
+      final bytes = await file.readAsBytes();
+      final data = await Api.uploadLampiran(field, bytes, file.name);
+      final l = data['lampiran'];
+      if (!mounted) return;
+      setState(() {
+        if (l is List) {
+          _lampiran = l
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList();
+        }
+        _uploadingField = '';
+      });
+      messenger.showSnackBar(
+          SnackBar(content: Text('$label berhasil diunggah.')));
+    } on Exception catch (e) {
+      if (mounted) setState(() => _uploadingField = '');
+      messenger.showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  void _toast(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
   }
 
   Widget _tabRiwayat() {
