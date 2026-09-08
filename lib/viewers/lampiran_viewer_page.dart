@@ -192,17 +192,20 @@ class _LampiranViewerPageState extends State<LampiranViewerPage> {
   Widget _imageView(Uint8List bytes) {
     return Container(
       color: Colors.black,
-      alignment: Alignment.center,
       child: InteractiveViewer(
-        minScale: 0.5,
+        clipBehavior: Clip.none,
+        boundaryMargin: const EdgeInsets.all(double.infinity),
+        minScale: 0.3,
         maxScale: 6,
-        child: Image.memory(
-          bytes,
-          fit: BoxFit.contain,
-          gaplessPlayback: true,
-          errorBuilder: (_, __, ___) => _unsupported(
-            Icons.broken_image_outlined,
-            'Format gambar tidak dikenali.',
+        child: Center(
+          child: Image.memory(
+            bytes,
+            fit: BoxFit.contain,
+            gaplessPlayback: true,
+            errorBuilder: (_, __, ___) => _unsupported(
+              Icons.broken_image_outlined,
+              'Format gambar tidak dikenali.',
+            ),
           ),
         ),
       ),
@@ -226,8 +229,8 @@ class _LampiranViewerPageState extends State<LampiranViewerPage> {
         _pdfController = controller;
         return PdfViewPinch(
           controller: controller,
-          backgroundDecoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+          backgroundDecoration: const BoxDecoration(
+            color: Colors.black,
           ),
         );
       },
