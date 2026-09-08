@@ -35,6 +35,15 @@ lama untuk siswa & wali. Satu codebase Flutter.
   Semester, Tanggal Masuk, Tanggal Daftar, Status) **hanya bisa dilihat**
   (read-only, di-grey) — tidak bisa diubah siswa/wali, karena diisi oleh
   petugas/admin atau dihasilkan dari JOIN server.
+- **Edit profil "baris per kolom"**: setiap field tampil sendiri satu baris
+  penuh (bukan kolom berdampingan), dalam kartu section berjudul + icon +
+  badge jumlah field; antar field dipisah garis halus — konsisten dengan tab
+  Profil.
+- **Lampiran dibuka di dalam aplikasi** (tanpa browser): file dari tab Lampiran
+  Profil maupun daftar `_tabLampiran` Edit Profil dibuka lewat
+  `lib/viewers/lampiran_viewer_page.dart` — gambar (png/jpg/jpeg/webp/gif/bmp)
+  dengan pinch-zoom, dan PDF dirender via `pdfx` (`PdfViewPinch`); tipe lain
+  ditampilkan sebagai "belum didukung" dengan tombol coba lagi.
 - **Tema Material You**: seluruh pewarnaan (background, appbar, nav, kartu, login)
   mengikuti color scheme wallpaper Android; fallback ke seed emerald brand bila
   dynamic color tak tersedia.
@@ -154,8 +163,11 @@ armeabi-v7a; x86_64 dipisah untuk emulator) — sertifikat resmi SHA-256
   `GET app/api/apk/profil_siswa` (token dari sesi; siswa_id dari guard server).
   Berisi hero gradien dengan tombol Edit, Data Pribadi, Alamat, Pendidikan +
   Riwayat Kelas (timeline), Kesehatan, Kontak & Dokumen, Sekolah Asal & Mutasi,
-  orang tua/wali, grid lampiran dokumen (buka file via url_launcher),
-  pull-to-refresh.
+  orang tua/wali, grid lampiran dokumen (buka gambar/PDF **di dalam aplikasi**
+  via `lib/viewers/lampiran_viewer_page.dart`), pull-to-refresh.
+- `lib/viewers/lampiran_viewer_page.dart` — penampil lampiran in-app: unduh
+  bytes dengan token sesi, deteksi tipe dari ekstensi/Content-Type, gambar
+  dengan zoom, PDF via `pdfx` `PdfViewPinch` (`lib/viewers`).
 - `lib/edit_profil/edit_profil_page.dart` — form edit profil siswa (semua kolom
   tabel `siswa`), kirim `POST app/api/apk/profil_siswa` (aksi `update`), reload
   otomatis saat kembali ke tab Profil.

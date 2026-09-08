@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/api.dart';
+import '../viewers/lampiran_viewer_page.dart';
 
 /// Halaman edit profil siswa.
 ///
@@ -302,8 +303,9 @@ class _EditProfilPageState extends State<EditProfilPage> {
     bool multiline = false,
     bool readOnly = false,
   }) {
+    final s = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.symmetric(vertical: 7),
       child: TextFormField(
         controller: c,
         readOnly: readOnly,
@@ -315,27 +317,49 @@ class _EditProfilPageState extends State<EditProfilPage> {
                 : phone
                     ? TextInputType.phone
                     : TextInputType.text,
+        style: readOnly ? TextStyle(color: s.onSurfaceVariant) : null,
         decoration: InputDecoration(
           labelText: label,
-          hintText: hint ??
-              (readOnly && c.text.isEmpty ? '—' : null),
-          filled: readOnly,
+          hintText: hint ?? (readOnly && c.text.isEmpty ? '—' : null),
+          filled: true,
           fillColor: readOnly
-              ? Theme.of(context).colorScheme.surfaceContainerHighest
-              : null,
+              ? s.surfaceContainerHighest.withValues(alpha: 0.55)
+              : s.surface,
+          isDense: true,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          enabledBorder: _outline(s.outlineVariant),
+          disabledBorder: _outline(s.outlineVariant.withValues(alpha: 0.5)),
+          focusedBorder: _outline(s.primary, width: 1.6),
         ),
       ),
     );
   }
 
+  InputBorder _outline(Color color, {double width = 1}) =>
+      OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: color, width: width),
+      );
+
   Widget _dropdown(TextEditingController c, String label,
       List<String> options) {
+    final s = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.symmetric(vertical: 7),
       child: DropdownButtonFormField<String>(
         initialValue: c.text.isNotEmpty && options.contains(c.text) ? c.text : null,
         isExpanded: true,
-        decoration: InputDecoration(labelText: label),
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: s.surface,
+          isDense: true,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          enabledBorder: _outline(s.outlineVariant),
+          focusedBorder: _outline(s.primary, width: 1.6),
+        ),
         items: [
           for (final o in options)
             DropdownMenuItem(value: o, child: Text(o.isEmpty ? '—' : o)),
@@ -347,18 +371,24 @@ class _EditProfilPageState extends State<EditProfilPage> {
 
   Widget _dateField(TextEditingController c, String label,
       {bool readOnly = false}) {
+    final s = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.symmetric(vertical: 7),
       child: InkWell(
         onTap: readOnly ? null : () => _pickDate(c),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(14),
         child: InputDecorator(
           decoration: InputDecoration(
             labelText: label,
-            filled: readOnly,
+            filled: true,
             fillColor: readOnly
-                ? Theme.of(context).colorScheme.surfaceContainerHighest
-                : null,
+                ? s.surfaceContainerHighest.withValues(alpha: 0.55)
+                : s.surface,
+            isDense: true,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            enabledBorder: _outline(s.outlineVariant),
+            focusedBorder: _outline(s.primary, width: 1.6),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -377,9 +407,19 @@ class _EditProfilPageState extends State<EditProfilPage> {
   Widget _section(
       String title, IconData icon, Color accent, List<Widget> fields) {
     final s = Theme.of(context).colorScheme;
+    final content = <Widget>[];
+    for (var i = 0; i < fields.length; i++) {
+      if (i > 0) {
+        content.add(
+          Divider(height: 1, thickness: 0.7,
+              color: s.outlineVariant.withValues(alpha: 0.35)),
+        );
+      }
+      content.add(fields[i]);
+    }
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
       decoration: BoxDecoration(
         color: s.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
@@ -390,29 +430,36 @@ class _EditProfilPageState extends State<EditProfilPage> {
         children: [
           Row(
             children: [
-              Icon(icon, size: 18, color: accent),
-              const SizedBox(width: 8),
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(icon, size: 19, color: accent),
+              ),
+              const SizedBox(width: 10),
               Text(title,
-                  style: TextStyle(
-                      fontSize: 14.5, fontWeight: FontWeight.w800,
-                      color: accent)),
+                  style: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w800)),
+              const Spacer(),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text('${fields.length} field',
+                    style: TextStyle(fontSize: 11, color: accent)),
+              ),
             ],
           ),
-          const SizedBox(height: 14),
-          ...fields,
+          const SizedBox(height: 8),
+          ...content,
         ],
       ),
-    );
-  }
-
-  Widget _two(
-      Widget a, Widget b) {
-    return Row(
-      children: [
-        Expanded(child: a),
-        const SizedBox(width: 12),
-        Expanded(child: b),
-      ],
     );
   }
 
@@ -501,10 +548,8 @@ class _EditProfilPageState extends State<EditProfilPage> {
       children: [
         _section('Data Pribadi', Icons.person_outline, s.tertiary, [
           _field(c['nama_lengkap']!, 'Nama Lengkap'),
-          _two(
-            _field(c['nis']!, 'NIS', readOnly: _readOnly.contains('nis')),
-            _field(c['nisn']!, 'NISN', readOnly: _readOnly.contains('nisn')),
-          ),
+          _field(c['nis']!, 'NIS', readOnly: _readOnly.contains('nis')),
+          _field(c['nisn']!, 'NISN', readOnly: _readOnly.contains('nisn')),
           _field(c['tempat_lahir']!, 'Tempat Lahir'),
           _dateField(c['tanggal_lahir']!, 'Tanggal Lahir'),
           _dropdown(c['jenis_kelamin']!, 'Jenis Kelamin', const ['L', 'P']),
@@ -518,14 +563,15 @@ class _EditProfilPageState extends State<EditProfilPage> {
           _dropdown(c['golongan_darah']!, 'Golongan Darah',
               const ['', 'A', 'B', 'AB', 'O', 'A+', 'A-', 'B+', 'B-', 'AB+',
                   'AB-', 'O+', 'O-']),
-          _two(_field(c['anak_ke']!, 'Anak Ke', number: true),
-              _field(c['jumlah_saudara']!, 'Jumlah Saudara', number: true)),
+          _field(c['anak_ke']!, 'Anak Ke', number: true),
+          _field(c['jumlah_saudara']!, 'Jumlah Saudara', number: true),
           _field(c['hobi']!, 'Hobi'),
           _field(c['cita_cita']!, 'Cita-cita'),
         ]),
         _section('Alamat', Icons.home_outlined, const Color(0xFF00897B), [
           _field(c['alamat']!, 'Alamat (Jalan / Dusun)', multiline: true),
-          _two(_field(c['rt']!, 'RT'), _field(c['rw']!, 'RW')),
+          _field(c['rt']!, 'RT'),
+          _field(c['rw']!, 'RW'),
           _field(c['desa_kelurahan']!, 'Desa / Kelurahan'),
           _field(c['kecamatan']!, 'Kecamatan'),
           _field(c['kabupaten']!, 'Kabupaten / Kota'),
@@ -556,12 +602,12 @@ class _EditProfilPageState extends State<EditProfilPage> {
           _field(c['disabilitas']!, 'Disabilitas'),
           _field(c['alergi']!, 'Alergi'),
           _field(c['riwayat_penyakit']!, 'Riwayat Penyakit'),
-          _two(_field(c['tinggi_badan']!, 'Tinggi Badan (cm)', number: true),
-              _field(c['berat_badan']!, 'Berat Badan (kg)', number: true)),
-          _two(_field(c['tinggi_badan_saat_masuk']!, 'TB Saat Masuk (cm)',
+          _field(c['tinggi_badan']!, 'Tinggi Badan (cm)', number: true),
+          _field(c['berat_badan']!, 'Berat Badan (kg)', number: true),
+          _field(c['tinggi_badan_saat_masuk']!, 'TB Saat Masuk (cm)',
               number: true),
-              _field(c['berat_badan_saat_masuk']!, 'BB Saat Masuk (kg)',
-                  number: true)),
+          _field(c['berat_badan_saat_masuk']!, 'BB Saat Masuk (kg)',
+              number: true),
           _field(c['pondok']!, 'Pondok'),
         ]),
         _section('Kontak & Dokumen', Icons.contact_page_outlined,
@@ -655,17 +701,29 @@ class _EditProfilPageState extends State<EditProfilPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _section('Dokumen Lampiran', Icons.folder_outlined, s.tertiary, [
-          for (final d in _lampiran)
+          for (final d in _lampiran) ...[
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.attach_file,
+              leading: Icon(
+                  d['tersedia'] == true
+                      ? Icons.visibility_outlined
+                      : Icons.attach_file,
                   color: d['tersedia'] == true ? s.primary : s.outlineVariant),
               title: Text(d['label']?.toString() ?? 'Dokumen'),
               subtitle: Text(
                   d['url']?.toString().isEmpty ?? true
                       ? 'Belum dilampirkan'
-                      : 'Buka dokumen'),
+                      : 'Buka di aplikasi'),
+              enabled: (d['url']?.toString().isNotEmpty ?? false),
+              onTap: (d['url']?.toString().isEmpty ?? true)
+                  ? null
+                  : () => _openLampiran(d['url']!.toString(),
+                      d['label']?.toString() ?? 'Dokumen'),
             ),
+            if (!identical(d, _lampiran.last))
+              Divider(height: 1, thickness: 0.7,
+                  color: s.outlineVariant.withValues(alpha: 0.35)),
+          ],
         ]),
       ],
     );
@@ -710,6 +768,10 @@ class _EditProfilPageState extends State<EditProfilPage> {
   }
 
   // ------------------------------------------------------------------ save
+  void _openLampiran(String raw, String label) {
+    openLampiran(context, raw, label);
+  }
+
   Future<void> _save() async {
     setState(() => _saving = true);
     try {

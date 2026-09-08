@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../core/api.dart';
 import '../core/session.dart';
 import '../edit_profil/edit_profil_page.dart';
+import '../viewers/lampiran_viewer_page.dart';
 
 class ProfilTab extends StatefulWidget {
   const ProfilTab({super.key});
@@ -956,7 +956,7 @@ class _ProfilTabState extends State<ProfilTab> {
                   ),
                   const Spacer(),
                   if (url.isNotEmpty)
-                    Icon(Icons.open_in_new, size: 15,
+                    Icon(Icons.visibility_outlined, size: 15,
                         color: s.onSurfaceVariant)
                   else
                     Icon(Icons.lock_outline, size: 15,
@@ -970,7 +970,7 @@ class _ProfilTabState extends State<ProfilTab> {
                   style: const TextStyle(
                       fontSize: 12.5, fontWeight: FontWeight.w700)),
               const SizedBox(height: 2),
-              Text(url.isNotEmpty ? 'Buka dokumen' : 'Belum dilampirkan',
+              Text(url.isNotEmpty ? 'Buka di aplikasi' : 'Belum dilampirkan',
                   style: TextStyle(
                       fontSize: 10.5,
                       color: url.isNotEmpty
@@ -1002,26 +1002,7 @@ class _ProfilTabState extends State<ProfilTab> {
   }
 
   Future<void> _openLampiran(String raw, String label) async {
-    try {
-      final url = raw.startsWith('http')
-          ? raw
-          : Uri.parse(kApiBaseUrl)
-              .resolve(raw.startsWith('/') ? raw.substring(1) : raw)
-              .toString();
-      final ok = await launchUrl(Uri.parse(url),
-          mode: LaunchMode.externalApplication);
-      if (!ok && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal membuka $label.')),
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tidak dapat membuka dokumen.')),
-        );
-      }
-    }
+    openLampiran(context, raw, label);
   }
 
   // ----------------------------------------------------------------- bantu
