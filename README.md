@@ -31,6 +31,10 @@ lama untuk siswa & wali. Satu codebase Flutter.
   tabel akhir (Siswa): Data Pribadi, Dokumen & Kontak, Fisik & Kesehatan,
   Pendidikan, Asrama, Alamat, dan Lain-lain. Simpan mengirim
   `POST app/api/apk/profil_siswa` dengan aksi `update` (lihat "Kontrak").
+  Data krusial/administratif (NIS, NISN, Kelas, Tingkat, Tahun Ajaran,
+  Semester, Tanggal Masuk, Tanggal Daftar, Status) **hanya bisa dilihat**
+  (read-only, di-grey) — tidak bisa diubah siswa/wali, karena diisi oleh
+  petugas/admin atau dihasilkan dari JOIN server.
 - **Tema Material You**: seluruh pewarnaan (background, appbar, nav, kartu, login)
   mengikuti color scheme wallpaper Android; fallback ke seed emerald brand bila
   dynamic color tak tersedia.

@@ -31,6 +31,14 @@ class _EditProfilPageState extends State<EditProfilPage> {
     (Icons.history_edu_outlined, 'Riwayat'),
   ];
 
+  /// Field siswa yang bersifat administratif/identitas — hanya boleh dilihat,
+  /// tidak bisa diubah siswa/wali (server juga tidak menyimpannya: hasil JOIN
+  /// atau diisi petugas/admin).
+  static const _readOnly = {
+    'nis', 'nisn', 'kelas', 'tingkat', 'tahun_ajaran', 'semester',
+    'tanggal_masuk', 'tanggal_daftar', 'status',
+  };
+
   static const _ortuMeta = {'id', 'siswa_id', 'jenis'};
   static const _ortuLabels = {
     'nama': 'Nama',
@@ -292,11 +300,13 @@ class _EditProfilPageState extends State<EditProfilPage> {
     bool email = false,
     bool phone = false,
     bool multiline = false,
+    bool readOnly = false,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: TextFormField(
         controller: c,
+        readOnly: readOnly,
         maxLines: multiline ? 3 : 1,
         keyboardType: number
             ? TextInputType.number
@@ -305,7 +315,15 @@ class _EditProfilPageState extends State<EditProfilPage> {
                 : phone
                     ? TextInputType.phone
                     : TextInputType.text,
-        decoration: InputDecoration(labelText: label, hintText: hint),
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint ??
+              (readOnly && c.text.isEmpty ? '—' : null),
+          filled: readOnly,
+          fillColor: readOnly
+              ? Theme.of(context).colorScheme.surfaceContainerHighest
+              : null,
+        ),
       ),
     );
   }
@@ -327,20 +345,28 @@ class _EditProfilPageState extends State<EditProfilPage> {
     );
   }
 
-  Widget _dateField(TextEditingController c, String label) {
+  Widget _dateField(TextEditingController c, String label,
+      {bool readOnly = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: InkWell(
-        onTap: () => _pickDate(c),
+        onTap: readOnly ? null : () => _pickDate(c),
         borderRadius: BorderRadius.circular(8),
         child: InputDecorator(
-          decoration: InputDecoration(labelText: label),
+          decoration: InputDecoration(
+            labelText: label,
+            filled: readOnly,
+            fillColor: readOnly
+                ? Theme.of(context).colorScheme.surfaceContainerHighest
+                : null,
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(c.text.isEmpty ? 'Pilih tanggal' : c.text,
+              Text(c.text.isEmpty ? '—' : c.text,
                   style: const TextStyle(fontSize: 15)),
-              const Icon(Icons.calendar_today_outlined, size: 18),
+              Icon(readOnly ? Icons.lock_outline : Icons.calendar_today_outlined,
+                  size: 18),
             ],
           ),
         ),
@@ -476,8 +502,8 @@ class _EditProfilPageState extends State<EditProfilPage> {
         _section('Data Pribadi', Icons.person_outline, s.tertiary, [
           _field(c['nama_lengkap']!, 'Nama Lengkap'),
           _two(
-            _field(c['nis']!, 'NIS'),
-            _field(c['nisn']!, 'NISN'),
+            _field(c['nis']!, 'NIS', readOnly: _readOnly.contains('nis')),
+            _field(c['nisn']!, 'NISN', readOnly: _readOnly.contains('nisn')),
           ),
           _field(c['tempat_lahir']!, 'Tempat Lahir'),
           _dateField(c['tanggal_lahir']!, 'Tanggal Lahir'),
@@ -507,14 +533,20 @@ class _EditProfilPageState extends State<EditProfilPage> {
           _field(c['kode_pos']!, 'Kode Pos'),
         ]),
         _section('Pendidikan', Icons.school_outlined, const Color(0xFFF57C00), [
-          _field(c['kelas']!, 'Kelas'),
-          _field(c['tingkat']!, 'Tingkat'),
-          _field(c['tahun_ajaran']!, 'Tahun Ajaran'),
-          _field(c['semester']!, 'Semester'),
-          _dateField(c['tanggal_masuk']!, 'Tanggal Masuk'),
-          _dateField(c['tanggal_daftar']!, 'Tanggal Daftar'),
-          _dropdown(c['status']!, 'Status',
-              const ['', 'Aktif', 'Lulus', 'Keluar', 'Pindah', 'Cuti']),
+          _field(c['kelas']!, 'Kelas',
+              readOnly: _readOnly.contains('kelas')),
+          _field(c['tingkat']!, 'Tingkat',
+              readOnly: _readOnly.contains('tingkat')),
+          _field(c['tahun_ajaran']!, 'Tahun Ajaran',
+              readOnly: _readOnly.contains('tahun_ajaran')),
+          _field(c['semester']!, 'Semester',
+              readOnly: _readOnly.contains('semester')),
+          _dateField(c['tanggal_masuk']!, 'Tanggal Masuk',
+              readOnly: _readOnly.contains('tanggal_masuk')),
+          _dateField(c['tanggal_daftar']!, 'Tanggal Daftar',
+              readOnly: _readOnly.contains('tanggal_daftar')),
+          _field(c['status']!, 'Status',
+              readOnly: _readOnly.contains('status')),
           _field(c['transportasi']!, 'Transportasi'),
           _field(c['jarak_rumah_ke_sekolah']!, 'Jarak Rumah → Sekolah',
               number: true),
