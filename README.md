@@ -128,12 +128,32 @@ git add -A && git commit -m "..." && git push origin main
 ```
 
 Workflow `.github/workflows/build-apk.yml` (Flutter stable) otomatis:
-analyze, test, build **APK arm64-v8a saja** (cepat; caching Flutter/Gradle), plus
-job **iOS build** di `macos-latest` (`flutter build ios --release --no-codesign`)
-untuk memastikan codebase tetap kompatibel iPhone/iPad. Artefak APK diunduh lalu
-ditandatangani lokal (keystore tidak pernah masuk repo — lihat di bawah). Untuk
+analyze, test, build **APK arm64-v8a saja** (cepat; caching Flutter/Gradle). Untuk
 **semua ABI** (rilis publik), jalankan `.github/workflows/build-full.yml`
 (dispatch manual atau tag `v*`) yang tetap menghasilkan split `arm64/v7a/x64`.
+
+### iOS — cara mendapatkan file install
+
+Tidak bisa dibangun dari Linux; perlu runner macOS. Aktifkan secara manual:
+
+```bash
+gh workflow run build-apk.yml        # job `ios-build` (macos-latest) hanya jalan saat workflow_dispatch
+gh run list --limit 1 --json databaseId,status
+gh run download <run-id> -n ios-ipa -D /tmp/ios_ipa
+```
+
+Hasil `build/ios/ipa/Runner.ipa` **belum bertanda tangan** (no-codesign) —
+belum bisa langsung di-install iPhone. Selesaikan penandatanganan di **Mac**:
+
+1. **Profil developer (Ad Hoc/Development)** — pakai Apple Developer account:
+   `xcodebuild -exportArchive -archivePath ... -exportOptionsPlist ExportOptions.plist` dengan
+   `method: ad-hoc` + sertifikat "Apple Distribution/Development" (tambahkan UDID iPhone).
+   App Free/Development bertahan 7 hari; TestFlight/App Store butuh akun berbayar.
+2. **Tanpa Mac** (perangkat fleksibel): aplikasi ini tak mendukung sideload &mdash;
+   sudut tercepat adalah **TestFlight** setelah kita punya akun developer.
+
+> Catatan: seluruh plugin (file_picker, pdfx, notifikasi, secure storage) sudah
+> kompatibel iOS 13.0+; build `--no-codesign` di CI berfungsi sebagai validasi.
 
 ### 3) Rilis final dari lokal (rekomendasi)
 

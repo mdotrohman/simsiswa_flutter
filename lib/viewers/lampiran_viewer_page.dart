@@ -1,6 +1,5 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:pdfx/pdfx.dart';
 
@@ -53,7 +52,15 @@ class _LampiranViewerPageState extends State<LampiranViewerPage> {
   @override
   void dispose() {
     _pdfController?.dispose();
+    _applyFullscreen(false);
     super.dispose();
+  }
+
+  /// Aktifkan mode immersive (sembunyikan status/navigation bar) supaya
+  /// pratinjau lampiran memakai seluruh layar; dikembalikan saat ditutup.
+  void _applyFullscreen(bool enable) {
+    SystemChrome.setEnabledSystemUIMode(
+        enable ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge);
   }
 
   Future<void> _load() async {
@@ -131,20 +138,30 @@ class _LampiranViewerPageState extends State<LampiranViewerPage> {
 
   Widget _buildBody() {
     if (_loading) {
+      _applyFullscreen(false);
       return const Center(
           child: CircularProgressIndicator(strokeWidth: 3));
     }
     if (_error.isNotEmpty) {
+      _applyFullscreen(false);
       return _errorView();
     }
     final bytes = _bytes;
-    if (bytes == null) return _errorView();
-    return switch (_type) {
+    if (bytes == null) {
+      _applyFullscreen(false);
+      return _errorView();
+    }
+    final Widget? viewer = switch (_type) {
       _DocType.image => _imageView(bytes),
       _DocType.pdf => _pdfView(),
-      _DocType.other => _otherView(),
-      null => _errorView(),
+      _ => null,
     };
+    if (viewer == null) {
+      _applyFullscreen(false);
+      return _otherView();
+    }
+    _applyFullscreen(true);
+    return viewer;
   }
 
   Widget _errorView() {
