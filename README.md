@@ -39,11 +39,15 @@ lama untuk siswa & wali. Satu codebase Flutter.
   penuh (bukan kolom berdampingan), dalam kartu section berjudul + icon +
   badge jumlah field; antar field dipisah garis halus — konsisten dengan tab
   Profil.
-- **Lampiran dibuka di dalam aplikasi** (tanpa browser): file dari tab Lampiran
-  Profil maupun daftar `_tabLampiran` Edit Profil dibuka lewat
-  `lib/viewers/lampiran_viewer_page.dart` — gambar (png/jpg/jpeg/webp/gif/bmp)
-  dengan pinch-zoom, dan PDF dirender via `pdfx` (`PdfViewPinch`); tipe lain
-  ditampilkan sebagai "belum didukung" dengan tombol coba lagi.
+- **Lampiran dibuka di dalam aplikasi** (tanpa browser) dalam mode **fullscreen
+  immersive** (status & navigation bar disembunyikan, kembali normal saat
+  ditutup): file dari tab Lampiran Profil maupun daftar `_tabLampiran` Edit
+  Profil dibuka lewat `lib/viewers/lampiran_viewer_page.dart` — gambar
+  (png/jpg/jpeg/webp/gif/bmp) dengan pinch-zoom memakai seluruh layar dan
+  **tidak terpotong** saat diperbesar (`clipBehavior: Clip.none` +
+  `boundaryMargin` tanpa batas, min 0.3× maks 6×), dan PDF dirender via
+  `pdfx` (`PdfViewPinch`) di atas background hitam; tipe lain ditampilkan
+  sebagai "belum didukung" dengan tombol coba lagi.
 - **Upload lampiran** (gambar/PDF, maks 5 MB): dari tab Lampiran Edit Profil
   (ikon + / upload per dokumen) maupun tombol **Unggah / Kelola** di tab
   Lampiran profil. Aplikasi memilih file (file_picker), kirim multipart ke
@@ -76,6 +80,23 @@ lama untuk siswa & wali. Satu codebase Flutter.
 - Kontrak upload lampiran: `POST app/api/apk/profil_siswa` **multipart/form-data**
   `{aksi:'upload', field}` + file `file` (gambar JPG/PNG/WebP/GIF/BMP atau PDF,
   maks 5 MB) → file disimpan di `<script_dir>/uploads_lampiran/<rand>.ext` (folder
+  dibuat otomatis, **butuh izin tulis PHP**), url relatif `uploads_lampiran/<name>`
+  di-resolve aplikasi ke base URL → respons `data.lampiran` = daftar terbaru.
+- **Pengaturan** (`lib/settings/settings_page.dart`): hub aplikasi berisi sub-halaman
+  Akun (data & logout), Tema (Sistem/Terang/Gelap — disimpan di preferensi & dipakai
+  `MaterialApp.themeMode`), Notifikasi (toggle + register token FCM), Privasi
+  (hapus data lokal), dan Tentang.
+- Nomor versi memakai 3 digit belakang (mis. `v1.433`), naik satu per build.
+
+## Cara Build (rekomendasi dari pengalaman nyata)
+
+Ada **dua jalur**, dipakai sesuai kebutuhan:
+
+| Kebutuhan | Jalur | Keterangan |
+|---|---|---|
+| **Development / iterasi cepat** | CI arm64 + `fetch_ci.sh` + `build_local.sh` | Push → CI ±3–4m → unduh (anti-race) → sign 4 detik. |
+| **Rilis yang dipakai publik** | GitHub Actions (`build-full.yml`) | Workflow terpisah: semua ABI (dispatch manual / tag `v*`). |
+| **Rilis final** | Lokal + injeksi lib dari artefak CI | Byte-identik dgn hasil CI. |
 | **Satu file untuk semua** | Lokal (universal/fat APK) | Gabung lib arm64+v7a → 1 APK (±15MB); fast-path arm64 saja ±8,6MB. |
 
 ### Kenapa dua jalur? (pelajaran yang sudah dibuktikan)
@@ -115,9 +136,16 @@ analyze, test, build **APK arm64-v8a saja** (cepat; caching Flutter/Gradle). Unt
 **semua ABI** (rilis publik), jalankan `.github/workflows/build-full.yml`
 (dispatch manual atau tag `v*`) yang tetap menghasilkan split `arm64/v7a/x64`.
 
-### iOS — cara mendapatkan file install
+### iOS — status & cara mendapatkan file install
 
-Tidak bisa dibangun dari Linux; perlu runner macOS. Aktifkan secara manual:
+> **Status (saat ini): DIJEDA.** Aplikasi iOS tidak bisa difinalisasi tanpa
+> **Apple Developer account (berbayar $99/th atau gratis-lembaga) + Mac** untuk
+> menandatangani (Xcode). Tidak ada jalur sideload murni (non-jailbreak) seperti
+> APK Android. Semua sisi teknis (kode iOS-ready, workflow CI) sudah siap; yang
+> menunggu hanya akun & infrastruktur signing. Rute saat akun aktif: **TestFlight
+> / Ad Hoc** (build + sign via Codemagic/GitHub macOS, tanpa Mac pribadi).
+
+Build iOS tidak bisa dari Linux; perlu runner macOS. Aktifkan secara manual:
 
 ```bash
 gh workflow run build-apk.yml        # job `ios-build` (macos-latest) hanya jalan saat workflow_dispatch
